@@ -46,6 +46,9 @@ jobs:
       - name: Install Chromium
         run: sudo apt-get update && sudo apt-get install -y chromium-browser
 
+      - name: Verify Chromium install path
+        run: which chromium-browser
+
       - name: Run accessibility-checker
         env:
           PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
