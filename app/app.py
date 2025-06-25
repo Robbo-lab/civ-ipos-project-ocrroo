@@ -4,7 +4,7 @@ import shutil
 from typing import Optional
 import utils
 import web_cli
-from extract_text import ExtractText
+from app.oop.extract_text import ExtractText
 from flask import Flask, render_template, request, send_file, redirect
 import html
 import glob

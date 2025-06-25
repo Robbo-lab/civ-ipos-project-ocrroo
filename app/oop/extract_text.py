@@ -3,8 +3,8 @@ import cv2
 import pytesseract
 import logging
 from typing import Union
-import utils
-from utils import config
+import app.utils
+from app.utils import config
 
 
 class ExtractText:
