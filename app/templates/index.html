@@ -1,7 +1,7 @@
 {% extends "new-base.html" %}
 {% set title = "Home" %}
 {% block content %}
-    <main id="mainContent" class="m-8">
+    <div class="m-8">
         {% if setup_progress|length < 4 %}
             <section class="mb-4">
                 <div class="w-fit mx-auto">
@@ -95,5 +95,5 @@
                 </div>
             </section>
         {% endif %}
-    </main>
+    </div>
 {% endblock %}
