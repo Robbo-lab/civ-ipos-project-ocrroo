@@ -3,7 +3,7 @@ import cv2
 import pytesseract
 import logging
 from typing import Union
-import app.utils
+import app.utils as utils
 from app.utils import config
 
 
