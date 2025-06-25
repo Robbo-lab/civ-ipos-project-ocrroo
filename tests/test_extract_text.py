@@ -1,7 +1,7 @@
 # tests/test_extract_text.py
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from app.oop.extract_text import ExtractText
 
 class TestExtractText(unittest.TestCase):
