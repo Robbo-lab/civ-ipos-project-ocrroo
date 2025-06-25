@@ -97,10 +97,10 @@
             <p class="text-xs text-center">Developed by<br><span class="font-bold">Team Mental Capacity</span></p>
         </div>
     </nav>
-    <div class="flex-grow flex flex-col">
-        <main id="mainContent" class="flex-grow" role="main">
+    <main id="mainContent"  class="flex-grow flex flex-col">
+        <div class="flex-grow" role="main">
             {% block content %}{% endblock %}
-        </main>
+        </div>
         <section id="webCliContainer" class="hidden h-64 overflow-y-auto bg-slate-800/90 text-white p-2 bottom-0 sticky left-0 right-0 z-50">
             <div class="flex items-center">
                 <label for="webCliInput" class="text-purple-300 w-fit mr-1">OcrRooWebCli></label>
@@ -108,7 +108,7 @@
             </div>
         </section>
         <script src="{{url_for('static', filename='js/webCli.js')}}"></script>
-    </div>
+    </main>
 </div>
 </body>
 </html>
