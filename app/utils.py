@@ -530,6 +530,8 @@ def extract_form_values(request):
             'use_youtube_downloader': youtube_downloader_enabled,
         }
     }
+
+
 def sort_videos(video_list, sort_by="alias"):
     """
     Sorts a list of videos
@@ -550,3 +552,17 @@ def sort_videos(video_list, sort_by="alias"):
     return video_list
 
 
+def sort_captures(capture_list, sort_by="timestamp"):
+    """
+    Sorts a list of capture records based on a specified criterion.
+
+    Args:
+        capture_list (list): A list of dictionaries, each representing a code capture.
+        sort_by (str): The sorting criterion: "timestamp".
+
+    Returns:
+        list: The sorted list of capture dictionaries.
+    """
+    if sort_by == "timestamp":
+        return sorted(capture_list, key=lambda x: x["timestamp"])
+    return capture_list
