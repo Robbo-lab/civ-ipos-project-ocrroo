@@ -530,3 +530,23 @@ def extract_form_values(request):
             'use_youtube_downloader': youtube_downloader_enabled,
         }
     }
+def sort_videos(video_list, sort_by="alias"):
+    """
+    Sorts a list of videos
+
+    Args:
+        video_list (list): A list of dictionaries, each representing a video.
+        sort_by (str): The sorting criterion. Options include: "timestamp","captures" and "alias"
+
+    Returns:
+        list: The sorted list of video dictionaries.
+    """
+    if sort_by == "timestamp":
+        return sorted(video_list, key=lambda x: x["video_length"], reverse=True)
+    elif sort_by == "captures":
+        return sorted(video_list, key=lambda x: len(x["captures"]), reverse=True)
+    elif sort_by == "alias":
+        return sorted(video_list, key=lambda x: x["alias"].lower())
+    return video_list
+
+
