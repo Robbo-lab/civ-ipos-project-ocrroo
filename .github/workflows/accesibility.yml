@@ -50,8 +50,8 @@ jobs:
           PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
         run: |
           sleep 10
-          achecker http://localhost:5000
-          achecker http://localhost:5000/upload
-          achecker http://localhost:5000/settings
+          achecker http://localhost:5000 --chrome-flags="--no-sandbox --disable-setuid-sandbox"
+          achecker http://localhost:5000/upload --chrome-flags="--no-sandbox --disable-setuid-sandbox"
+          achecker http://localhost:5000/settings --chrome-flags="--no-sandbox --disable-setuid-sandbox"
 
 
