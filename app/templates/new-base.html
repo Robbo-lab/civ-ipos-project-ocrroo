@@ -17,12 +17,28 @@
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="icon" type="image/png" href="{{ url_for("static", filename="resources/favicon.png") }}">
+    <style>
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background-color: #000;
+        color: #fff;
+        padding: 8px;
+        z-index: 1000;
+        text-decoration: none;
+        transition: top 0.3s;
+      }
+      .skip-link:focus {
+        top: 0;
+      }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-gray-50 to-purple-200">
 
 <div class="flex">
     <nav class="flex h-screen flex-col sticky left-0 top-0 w-fit min-w-fit justify-between border-e bg-white">
-        <a href="#mainContent" class="sr-only">Skip to Main Content</a>
+        <a href="#mainContent" class="skip-link">Skip to Main Content</a>
         <div class="p-4">
             <div class="flex items-center w-fit mx-auto">
                 <img class="w-10" src="{{ url_for("static", filename="resources/logo.png") }}"
