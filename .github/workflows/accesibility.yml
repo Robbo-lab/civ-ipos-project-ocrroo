@@ -43,15 +43,16 @@ jobs:
           flask run -h localhost -p 5000 &
       
       # Run accessibility-checker
+      - name: Install Chromium
+        run: sudo apt-get update && sudo apt-get install -y chromium-browser
+
       - name: Run accessibility-checker
         env:
-          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-          PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
         run: |
           sleep 10
-          achecker http://localhost:5000 --chrome-flags="--no-sandbox --disable-setuid-sandbox"
-          achecker http://localhost:5000/upload --chrome-flags="--no-sandbox --disable-setuid-sandbox"
-          achecker http://localhost:5000/settings --chrome-flags="--no-sandbox --disable-setuid-sandbox"
-
+          achecker http://localhost:5000
+          achecker http://localhost:5000/upload
+          achecker http://localhost:5000/settings
 
