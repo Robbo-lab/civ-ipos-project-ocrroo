@@ -43,11 +43,9 @@ jobs:
 
       # Run accessibility-checker
       - name: Run accessibility-checker
-        env:
-          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: false
         run: |
-          sleep 30
-          achecker crawl http://127.0.0.1:5000 --no-sandbox
-          achecker crawl http://127.0.0.1:5000/upload --no-sandbox
-          achecker crawl http://127.0.0.1:5000/settings --no-sandbox
+          sleep 10
+          achecker http://127.0.0.1:5000
+          achecker http://127.0.0.1:5000/upload
+          achecker http://127.0.0.1:5000/settings
       
