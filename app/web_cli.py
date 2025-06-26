@@ -79,7 +79,7 @@ def available_videos() -> {}:
     return filename_dict
 
 
-def list_videos() -> str:
+def list_videos(sort_by="alias") -> str:
     """
     Returns formatted list of videos in users library
     :return: HTML formatted string of videos
@@ -88,7 +88,7 @@ def list_videos() -> str:
     user_data = utils.read_user_data()
     if user_data is None:
         return "<p class='text-red-500'>No videos found in your library.<p>"
-    all_videos = user_data["all_videos"]
+    all_videos = utils.sort_videos(user_data["all_videos"], sort_by=sort_by)  #sort videos before formatting
     formatted_video_string = "<pre><strong>Your Videos:</strong>"
     for current_video in all_videos:
         current_video_string = f"<br><p><strong>Filename: " \
