@@ -44,6 +44,7 @@ jobs:
       - name: Run accessibility-checker
         run: |
           sleep 10
-          achecker http://localhost:5000 
-          achecker http://localhost:5000/upload 
-          achecker http://localhost:5000/settings
+          achecker --no-sandbox http://localhost:5000
+          achecker --no-sandbox http://localhost:5000/upload
+          achecker --no-sandbox http://localhost:5000/settings
+      

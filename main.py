@@ -1,6 +1,7 @@
 from app.web_cli import parse_command
 from app.web_cli import parse_split_command
 
+
 def main():
     print("Welcome to OCRROO CLI. Type 'help' for a list of commands.")
     while True:
@@ -10,6 +11,7 @@ def main():
             break
         result = parse_command(command)
         print(result)
+
 
 if __name__ == "__main__":
     main()
