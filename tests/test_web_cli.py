@@ -128,3 +128,17 @@ def test_list_videos_sorted_by_timestamp(mocker):
     assert second == "loops.mp4" # next longest 418
     assert third == "list_ops_handwriting.mp4" # shortest 186
 
+def test_list_videos_sorted_by_alias(mocker):
+    dummy_data=load_dummy_user_data()
+    mocker.patch("app.utils.read_user_data", return_value=dummy_data)
+    sorted_data =sort_videos(dummy_data["all_videos"], sort_by="alias")
+    mocker.patch("app.utils.sort_videos", return_value=sorted_data)
+    result = web_cli.list_videos(sort_by="alias")
+    first = sorted_data[0]["filename"]
+    second = sorted_data[1]["filename"]
+    third = sorted_data[2]["filename"]
+    #alphabetical order
+    assert result.index(first) < result.index(second) < result.index(third)
+    assert first == "list_ops_handwriting.mp4"
+    assert second == "loops.mp4"
+    assert third == "oop.mp4"
