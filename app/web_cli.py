@@ -23,8 +23,13 @@ def parse_command(command: str) -> Union[str, dict]:
     if command == "open":
         return "open"
     # List videos command
-    if command == "list-videos":
-        return list_videos()
+    if command.startswith("list-videos"):
+        parts = command.split(" ")
+        sort_by = "alias"
+        for part in parts[1:]:
+            if part.startswith("sort="):
+                sort_by = part.split("=", 1)[1].strip().lower()
+        return list_videos(sort_by=sort_by)
     # Available videos for autocomplete
     if command == "available-videos":
         return available_videos()
