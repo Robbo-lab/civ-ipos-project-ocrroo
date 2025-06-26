@@ -7,14 +7,9 @@ policies:
 
 failLevels:
   - violation
-  - potentialviolation
 
 reportLevels:
   - violation
-  - potentialviolation
-  - recommendation
-  - potentialrecommendation
-  - manual
 
 outputFormat:
   - json
