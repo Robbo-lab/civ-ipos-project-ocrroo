@@ -15,7 +15,7 @@ def parse_command(command: str) -> Union[str, dict]:
         return "clear"
     # Help menu command
     if command == "help":
-        return utils.read_from_file("static\\resources\\help_menu.html")
+        return utils.read_from_file("app\\static\\resources\\help_menu.html")
     # Capture frame command
     if command == "capture":
         return "capture"
