@@ -28,6 +28,10 @@ def test_parse_command_list_videos(mocker):
     assert web_cli.parse_command("list-videos") == "dummy video list"
 
 
+def test_parse_command_list_videos_with_sort(mocker):
+    mocker.patch("app.web_cli.list_videos", return_value="dummy video list")
+    assert web_cli.parse_command("list-videos sort") == "dummy video list"
+
 def test_parse_command_available_videos(mocker):
     mocker.patch("app.web_cli.available_videos", return_value="dummy video list")
     assert web_cli.parse_command("available-videos") == "dummy video list"
