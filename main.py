@@ -1,5 +1,4 @@
 from app.web_cli import parse_command
-from app.web_cli import parse_split_command
 
 
 def main():

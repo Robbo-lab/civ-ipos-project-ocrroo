@@ -24,6 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install flask
           pip install -r requirements.txt
           
       # Set up Node.js
@@ -43,7 +44,8 @@ jobs:
       # Run accessibility-checker
       - name: Run accessibility-checker
         run: |
-          sleep 10
+          set -x
+          sleep 15
           achecker --no-sandbox http://localhost:5000
           achecker --no-sandbox http://localhost:5000/upload
           achecker --no-sandbox http://localhost:5000/settings
