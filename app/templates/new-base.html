@@ -17,12 +17,28 @@
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="icon" type="image/png" href="{{ url_for("static", filename="resources/favicon.png") }}">
+    <style>
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background-color: #000;
+        color: #fff;
+        padding: 8px;
+        z-index: 1000;
+        text-decoration: none;
+        transition: top 0.3s;
+      }
+      .skip-link:focus {
+        top: 0;
+      }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-gray-50 to-purple-200">
-
+<a href="#mainContent" class="skip-link">Skip to Main Content</a>
 <div class="flex">
     <nav class="flex h-screen flex-col sticky left-0 top-0 w-fit min-w-fit justify-between border-e bg-white">
-        <a href="#mainContent" class="sr-only">Skip to Main Content</a>
+
         <div class="p-4">
             <div class="flex items-center w-fit mx-auto">
                 <img class="w-10" src="{{ url_for("static", filename="resources/logo.png") }}"
@@ -81,10 +97,10 @@
             <p class="text-xs text-center">Developed by<br><span class="font-bold">Team Mental Capacity</span></p>
         </div>
     </nav>
-    <div class="flex-grow flex flex-col">
-        <main id="mainContent" class="flex-grow">
+    <main id="mainContent" role="main" class="flex-grow flex flex-col">
+        <div class="flex-grow" >
             {% block content %}{% endblock %}
-        </main>
+        </div>
         <section id="webCliContainer" class="hidden h-64 overflow-y-auto bg-slate-800/90 text-white p-2 bottom-0 sticky left-0 right-0 z-50">
             <div class="flex items-center">
                 <label for="webCliInput" class="text-purple-300 w-fit mr-1">OcrRooWebCli></label>
@@ -92,7 +108,7 @@
             </div>
         </section>
         <script src="{{url_for('static', filename='js/webCli.js')}}"></script>
-    </div>
+    </main>
 </div>
 </body>
 </html>

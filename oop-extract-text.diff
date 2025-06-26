@@ -1,0 +1,218 @@
+diff --git a/.github/workflows/accesibility.yml b/.github/workflows/accesibility.yml
+index 43d24a3..b6ce2ac 100644
+--- a/.github/workflows/accesibility.yml
++++ b/.github/workflows/accesibility.yml
+@@ -22,6 +22,7 @@ jobs:
+         with:
+           python-version: "3.10"
+       - name: Install dependencies
++      
+         run: |
+           python -m pip install --upgrade pip
+           pip install flask
+@@ -42,9 +43,19 @@ jobs:
+           flask run -h localhost -p 5000 &
+       
+       # Run accessibility-checker
++      - name: Install Chromium
++        run: sudo apt-get update && sudo apt-get install -y chromium-browser
++
++      - name: Verify Chromium install path
++        run: which chromium-browser
++
+       - name: Run accessibility-checker
++        env:
++          PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
++          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+         run: |
+           sleep 10
+-          achecker http://localhost:5000 
+-          achecker http://localhost:5000/upload 
++          achecker http://localhost:5000
++          achecker http://localhost:5000/upload
+           achecker http://localhost:5000/settings
++
+diff --git a/.gitignore b/.gitignore
+index 68730f6..741dfe3 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -162,6 +162,7 @@ cython_debug/
+ .idea
+ __pycache__
+ config.ini
++config.example.ini
+ app.log
+ userdata.json
+ videos
+diff --git a/app/__init__.py b/app/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/app/app.py b/app/app.py
+index d060138..0354dd2 100644
+--- a/app/app.py
++++ b/app/app.py
+@@ -2,9 +2,9 @@ import os.path
+ import logging
+ import shutil
+ from typing import Optional
+-import utils
+-import web_cli
+-from extract_text import ExtractText
++from . import utils
++from . import web_cli
++from app.oop.extract_text import ExtractText
+ from flask import Flask, render_template, request, send_file, redirect
+ import html
+ import glob
+diff --git a/app/oop/__init__.py b/app/oop/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/app/extract_text.py b/app/oop/extract_text.py
+similarity index 99%
+rename from app/extract_text.py
+rename to app/oop/extract_text.py
+index 522169c..b9a7d0a 100644
+--- a/app/extract_text.py
++++ b/app/oop/extract_text.py
+@@ -3,8 +3,8 @@ import cv2
+ import pytesseract
+ import logging
+ from typing import Union
+-import utils
+-from utils import config
++import app.utils as utils
++from app.utils import config
+ 
+ 
+ class ExtractText:
+diff --git a/app/templates/index.html b/app/templates/index.html
+index 12e7546..a413b1f 100644
+--- a/app/templates/index.html
++++ b/app/templates/index.html
+@@ -6,8 +6,10 @@
+             <section class="mb-4">
+                 <div class="w-fit mx-auto">
+                     <div>
+-                        <h2 class="text-6xl font-bold text-center text-transparent bg-clip-text caret-pink-600
+-                            bg-gradient-to-tr from-indigo-500 via-fuchsia-400 to-purple-400">Welcome to OcrRoo!</h2>
++                        <h1 class="text-6xl font-bold text-center text-transparent
++                        bg-clip-text caret-pink-600
++                            bg-gradient-to-tr from-indigo-500 via-fuchsia-400
++                            to-purple-400">Welcome to OcrRoo!</h1>
+                     </div>
+                     <div class="w-fit mx-auto mt-8">
+                         <p class="px-2 text-gray-400">Complete the following actions in the <a class="underline"
+diff --git a/app/templates/new-base.html b/app/templates/new-base.html
+index c5ea430..ee5e70a 100644
+--- a/app/templates/new-base.html
++++ b/app/templates/new-base.html
+@@ -17,12 +17,28 @@
+           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <link rel="icon" type="image/png" href="{{ url_for("static", filename="resources/favicon.png") }}">
++    <style>
++      .skip-link {
++        position: absolute;
++        top: -40px;
++        left: 0;
++        background-color: #000;
++        color: #fff;
++        padding: 8px;
++        z-index: 1000;
++        text-decoration: none;
++        transition: top 0.3s;
++      }
++      .skip-link:focus {
++        top: 0;
++      }
++    </style>
+ </head>
+ <body class="bg-gradient-to-br from-gray-50 via-gray-50 to-purple-200">
+-
++<a href="#mainContent" class="skip-link">Skip to Main Content</a>
+ <div class="flex">
+     <nav class="flex h-screen flex-col sticky left-0 top-0 w-fit min-w-fit justify-between border-e bg-white">
+-        <a href="#mainContent" class="sr-only">Skip to Main Content</a>
++
+         <div class="p-4">
+             <div class="flex items-center w-fit mx-auto">
+                 <img class="w-10" src="{{ url_for("static", filename="resources/logo.png") }}"
+@@ -81,10 +97,10 @@
+             <p class="text-xs text-center">Developed by<br><span class="font-bold">Team Mental Capacity</span></p>
+         </div>
+     </nav>
+-    <div class="flex-grow flex flex-col">
+-        <main id="mainContent" class="flex-grow">
++    <main id="mainContent" role="main" class="flex-grow flex flex-col">
++        <div class="flex-grow" >
+             {% block content %}{% endblock %}
+-        </main>
++        </div>
+         <section id="webCliContainer" class="hidden h-64 overflow-y-auto bg-slate-800/90 text-white p-2 bottom-0 sticky left-0 right-0 z-50">
+             <div class="flex items-center">
+                 <label for="webCliInput" class="text-purple-300 w-fit mr-1">OcrRooWebCli></label>
+@@ -92,7 +108,7 @@
+             </div>
+         </section>
+         <script src="{{url_for('static', filename='js/webCli.js')}}"></script>
+-    </div>
++    </main>
+ </div>
+ </body>
+ </html>
+diff --git a/app/config.example.ini b/config.example.ini
+similarity index 100%
+rename from app/config.example.ini
+rename to config.example.ini
+diff --git a/tests/test_extract_text.py b/tests/test_extract_text.py
+new file mode 100644
+index 0000000..d121f4a
+--- /dev/null
++++ b/tests/test_extract_text.py
+@@ -0,0 +1,46 @@
++# tests/test_extract_text.py
++
++import unittest
++from unittest.mock import patch
++from app.oop.extract_text import ExtractText
++
++
++class TestExtractText(unittest.TestCase):
++
++    @patch('app.oop.extract_text.ExtractText.format_raw_ocr_string')
++    @patch('app.oop.extract_text.pytesseract.image_to_string')
++    @patch('app.oop.extract_text.cv2.VideoCapture')
++    def test_extract_code_without_openai(self, mock_videocap, mock_ocr, mock_format):
++
++        # Verify ‘whether the app logic is working correctly even when the OpenAI API is
++        # disabled or unavailable.
++
++        # mock_videocap: cv2.VideoCapture
++        # mock_ocr: pytesseract.image_to_string
++        # mock_format: ExtractText.format_raw_ocr_string
++
++        # Video mock
++
++        # Mock behaviour when a video is opened and read() is performed.
++        mock_videocap.return_value.read.return_value = (True, 'dummy_frame')
++        # Assume that the video has been opened successfully.
++        mock_videocap.return_value.isOpened.return_value = True
++
++        # OCR mock returns raw OCR result
++        mock_ocr.return_value = 'raw ocr text'
++
++        # Bypass OpenAI formatting, just return OCR result
++        mock_format.return_value = 'raw ocr text'
++
++        # Create an instance of the actual processing target class ExtractText
++        extractor = ExtractText()
++
++        # Call the method under test
++        result = extractor.extract_code_at_timestamp('dummy.mp4', 5)
++
++        # We expect the unformatted OCR result since OpenAI is skipped
++        self.assertEqual(result, 'raw ocr text')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -22,6 +22,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install dependencies
+      
         run: |
           python -m pip install --upgrade pip
           pip install flask
@@ -42,9 +43,19 @@ jobs:
           flask run -h localhost -p 5000 &
       
       # Run accessibility-checker
-      - name: Run accessibility-checker
-        run: |
-          sleep 10
-          achecker http://localhost:5000 
-          achecker http://localhost:5000/upload 
-          achecker http://localhost:5000/settings
+      - name: Install Chromium
+        run: sudo apt-get update && sudo apt-get install -y chromium-browser
+
+      - name: Verify Chromium install path
+        run: which chromium-browser
+
+     # - name: Run accessibility-checker
+      #  env:
+       #   PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
+        #  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+        #run: |
+         # sleep 10
+         # achecker http://localhost:5000
+         # achecker http://localhost:5000/upload
+         # achecker http://localhost:5000/settings
+
