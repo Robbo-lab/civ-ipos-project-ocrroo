@@ -1,6 +1,8 @@
+from pytest_mock.plugin import assert_wrapper
+
 from app import web_cli
 from tests.test_utils import load_dummy_user_data
-
+from app.utils import sort_videos
 
 def test_parse_command_cls():
     assert web_cli.parse_command("cls") == "clear"
@@ -98,3 +100,16 @@ def test_list_videos(mocker):
 def test_list_videos_empty(mocker):
     mocker.patch("app.utils.read_user_data", return_value=None)
     assert web_cli.list_videos() == "<p class='text-red-500'>No videos found in your library.<p>"
+
+def test_list_videos_sorted_by_captures(mocker):
+    dummy_data=load_dummy_user_data()
+    mocker.patch("app.utils.read_user_data", return_value=dummy_data)
+    sorted_data =sort_videos(dummy_data["all_videos"], sort_by="captures")
+    mocker.patch("app.utils.sort_videos", return_value=sorted_data)
+
+    result = web_cli.list_videos(sort_by="captures")
+    first = sorted_data[0]["filename"]
+    assert first == "list_ops_handwriting.mp4" # 1 capture
+    assert "oop.mp4" in result  # 0 capture
+    assert "loops.mp4" in result # 0 capture
+
