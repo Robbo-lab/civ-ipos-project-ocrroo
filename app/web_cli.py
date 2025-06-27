@@ -93,10 +93,10 @@ def list_videos() -> str:
     for current_video in all_videos:
         current_video_string = f"<br><p><strong>Filename: " \
                                f"</strong>{current_video['filename']}</p><p><strong>Duration: " \
-                               f"</strong>{utils.format_timestamp(current_video['video_length'])}</p>"
+                               f"</strong>{utils.GeneralUtils.format_timestamp(current_video['video_length'])}</p>"
         if current_video["progress"] != 0:
             current_video_string += f"<p><strong>Progress: " \
-                                    f"</strong>{utils.format_timestamp(current_video['progress'])}</p>"
+                                    f"</strong>{utils.GeneralUtils.format_timestamp(current_video['progress'])}</p>"
         capture_count = len(current_video["captures"])
         if capture_count > 0:
             current_video_string += f"<p><strong>Captures: </strong>{capture_count}</p>"

@@ -119,6 +119,37 @@ class ConfigManager:
         return setup_progress
 
 
+class GeneralUtils:
+    @staticmethod
+    def hash_string(str_input: str) -> str:
+        hash_md5 = hashlib.md5()
+        hash_md5.update(str_input.encode('utf-8'))
+        return hash_md5.hexdigest()
+
+    @staticmethod
+    def format_timestamp(seconds: int) -> str:
+        minutes = seconds // 60
+        remaining_seconds = seconds % 60
+        return f'{str(minutes).zfill(2)}:{str(remaining_seconds).zfill(2)}'
+
+    @staticmethod
+    def get_file_extension_for_current_language() -> str:
+        current_language = ConfigManager.load("UserSettings", "programming_language").lower()
+        programming_languages = {
+            'python': '.py', 'javascript': '.js', 'java': '.java', 'c': '.c', 'c++': '.h', 'c#': '.cs',
+            'ruby': '.rb', 'php': '.php', 'swift': '.swift', 'go': '.go', 'rust': '.rs', 'kotlin': '.kt',
+            'typescript': '.ts', 'scala': '.scala', 'objective-c': '.m', 'r': '.r', 'dart': '.dart',
+            'lua': '.lua', 'perl': '.pl', 'haskell': '.hs', 'elixir': '.ex', 'shell': '.sh',
+            'groovy': '.groovy', 'powershell': '.ps1', 'batch': '.bat', 'erlang': '.erl', 'clojure': '.clj',
+            'elm': '.elm', 'julia': '.jl', 'f#': '.fs', 'fortran': '.f', 'pascal': '.pas', 'ocaml': '.ml',
+            'matlab': '.m', 'sql': '.sql', 'pl/sql': '.pls', 'assembly': '.asm', 'vb.net': '.vb',
+            'lisp': '.lisp', 'scheme': '.scm', 'ada': '.ada', 'cobol': '.cbl', 'd': '.d', 'tcl': '.tcl',
+            'awk': '.awk', 'xml': '.xml', 'json': '.json', 'yaml': '.yml', 'html': '.html', 'css': '.css',
+            'sass': '.sass', 'less': '.less', 'markdown': '.md', 'latex': '.tex'
+        }
+        return programming_languages.get(current_language, ".txt")
+    
+
 def hash_video_file(filename: str) -> str:
     """
     Calculates and returns the hash of a video file.
@@ -130,28 +161,6 @@ def hash_video_file(filename: str) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
-def hash_string(str_input: str) -> str:
-    """
-    Calculate md5 hash of string.
-    :param str_input: String to hash
-    :return: Returns hex based md5 hash as str
-    """
-    hash_md5 = hashlib.md5()
-    hash_md5.update(str_input.encode('utf-8'))
-    return hash_md5.hexdigest()
-
-
-def format_timestamp(seconds: int) -> str:
-    """
-    Format a timestamp from seconds to standard format (HH:MM)
-    :param seconds: Timestamp to format
-    :return: Returns formatted timestamp as a string
-    """
-    minutes = seconds // 60
-    remaining_seconds = seconds % 60
-    return f'{str(minutes).zfill(2)}:{str(remaining_seconds).zfill(2)}'
 
 
 def read_user_data() -> json:
@@ -180,7 +189,7 @@ def get_vid_save_path() -> str:
     Returns output path from config variables, will set default to root of project\\out\\videos\\
     :return: file path as string
     """
-    vid_download_path = config("UserSettings", "video_save_path")
+    vid_download_path = GeneralUtils.config("UserSettings", "video_save_path")
     # Set default output path for video download path
     if vid_download_path == "output_path":
         default_path = os.path.dirname(os.getcwd()) + "\\out\\videos\\"
@@ -200,7 +209,7 @@ def get_output_path() -> str:
     Returns output path from config variables, will set default to root of project\\out
     :return: file path as string
     """
-    output_path = config("UserSettings", "capture_output_path")
+    output_path = GeneralUtils.config("UserSettings", "capture_output_path")
     # Set default output path for code files
     if output_path == "output_path":
         default_path = os.path.dirname(os.getcwd()) + "\\out\\"
@@ -224,7 +233,7 @@ def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
     file_path = write_to_file(code_snippet,
                               file_path=f"{get_output_path()}"
                                         f"{os.path.splitext(filename.replace(' ', '_'))[0]}"
-                                        f"{get_file_extension_for_current_language()}")
+                                        f"{GeneralUtils.get_file_extension_for_current_language()}")
     if file_path is None:
         return False
     try:
@@ -234,29 +243,6 @@ def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
     except subprocess.SubprocessError as error:
         logging.error(error)
         return False
-
-
-def get_file_extension_for_current_language() -> str:
-    """
-    Get the file extension of the users current programming language
-    :return: file extension as string
-    """
-    current_language = config("UserSettings", "programming_language").lower()
-    programming_languages = {
-        'python': '.py', 'javascript': '.js', 'java': '.java', 'c': '.c', 'c++': '.h', 'c#': '.cs',
-        'ruby': '.rb', 'php': '.php', 'swift': '.swift', 'go': '.go', 'rust': '.rs', 'kotlin': '.kt',
-        'typescript': '.ts', 'scala': '.scala', 'objective-c': '.m', 'r': '.r', 'dart': '.dart',
-        'lua': '.lua', 'perl': '.pl', 'haskell': '.hs', 'elixir': '.ex', 'shell': '.sh',
-        'groovy': '.groovy', 'powershell': '.ps1', 'batch': '.bat', 'erlang': '.erl', 'clojure': '.clj',
-        'elm': '.elm', 'julia': '.jl', 'f#': '.fs', 'fortran': '.f', 'pascal': '.pas', 'ocaml': '.ml',
-        'matlab': '.m', 'sql': '.sql', 'pl/sql': '.pls', 'assembly': '.asm', 'vb.net': '.vb',
-        'lisp': '.lisp', 'scheme': '.scm', 'ada': '.ada', 'cobol': '.cbl', 'd': '.d', 'tcl': '.tcl',
-        'awk': '.awk', 'xml': '.xml', 'json': '.json', 'yaml': '.yml', 'html': '.html', 'css': '.css',
-        'sass': '.sass', 'less': '.less', 'markdown': '.md', 'latex': '.tex'
-    }
-    if current_language in programming_languages:
-        return programming_languages[current_language]
-    return ".txt"
 
 
 def write_to_file(content: str, file_path: str) -> Union[str, None]:
@@ -303,9 +289,9 @@ def get_video_data(filename: str) -> []:
         return None
     for current_video in user_data["all_videos"]:
         if current_video["filename"] == filename:
-            current_video["video_length"] = format_timestamp(current_video["video_length"])
+            current_video["video_length"] = ConfigManager.format_timestamp(current_video["video_length"])
             for current_capture in current_video["captures"]:
-                current_capture["timestamp"] = format_timestamp(current_capture["timestamp"])
+                current_capture["timestamp"] = ConfigManager.format_timestamp(current_capture["timestamp"])
             return current_video
     return None
 
@@ -419,9 +405,9 @@ def parse_video_data() -> []:
             if current_video["progress"] < current_video["video_length"]:
                 current_video["progress_percent"] = \
                     round((current_video["progress"] / current_video["video_length"]) * 100)
-                current_video["progress"] = format_timestamp(current_video["progress"])
+                current_video["progress"] = GeneralUtils.format_timestamp(current_video["progress"])
                 continue_watching.append(current_video)
-            current_video["video_length"] = format_timestamp(current_video["video_length"])
+            current_video["video_length"] = GeneralUtils.format_timestamp(current_video["video_length"])
     else:
         continue_watching = None
         all_videos = None
