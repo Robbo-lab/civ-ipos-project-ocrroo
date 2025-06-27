@@ -57,12 +57,12 @@ def test_parse_command_navigate_settings():
 
 
 def test_parse_command_play_video_valid(mocker):
-    mocker.patch("app.utils.filename_exists_in_userdata", return_value=True)
+    mocker.patch("app.utils.VideoManager.filename_exists_in_userdata", return_value=True)
     assert web_cli.parse_command("play-video my_video.mp4") == {"play_video": "my_video.mp4"}
 
 
 def test_parse_command_play_video_invalid_video(mocker):
-    mocker.patch("app.utils.filename_exists_in_userdata", return_value=False)
+    mocker.patch("app.utils.VideoManager.filename_exists_in_userdata", return_value=False)
     assert web_cli.parse_command("play-video bad_video.mp4") == "<span class=\"text-red-500\">Failed to open video " \
                                                                 "\"bad_video.mp4\", file does not exist</span>"
 

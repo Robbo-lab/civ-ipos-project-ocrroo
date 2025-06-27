@@ -31,22 +31,22 @@ def load_dummy_user_data():
 
 def test_file_exists_in_user_data_true(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
-    assert utils.filename_exists_in_userdata("loops.mp4")
+    assert utils.VideoManager.filename_exists_in_userdata("loops.mp4")
 
 
 def test_file_exists_in_user_data_false(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
-    assert not utils.filename_exists_in_userdata("does_not_exist.mp4")
+    assert not utils.VideoManager.filename_exists_in_userdata("does_not_exist.mp4")
 
 
 def test_file_exists_in_user_data_empty_user_data(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=None)
-    assert not utils.filename_exists_in_userdata("hello-world.mp4")
+    assert not utils.VideoManager.filename_exists_in_userdata("hello-world.mp4")
 
 
 def test_parse_video_data(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
-    parsed_video_data = utils.parse_video_data()
+    parsed_video_data = utils.VideoManager.parse_video_data()
     assert len(parsed_video_data["all_videos"]) == 3
     assert len(parsed_video_data["continue_watching"]) == 2
     assert parsed_video_data["continue_watching"][0]["filename"] == "oop.mp4"
@@ -58,7 +58,7 @@ def test_parse_video_data(mocker):
 
 def test_parse_video_data_empty_user_data(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=None)
-    parsed_video_data = utils.parse_video_data()
+    parsed_video_data = utils.VideoManager.parse_video_data()
     assert parsed_video_data["all_videos"] is None
     assert parsed_video_data["continue_watching"] is None
 
@@ -66,21 +66,21 @@ def test_parse_video_data_empty_user_data(mocker):
 def test_delete_video_from_user_data(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
     mocker.patch("app.utils.open")
-    utils.delete_video_from_userdata("loops.mp4")
-    assert not utils.filename_exists_in_userdata("loops.mp4")
+    utils.VideoManager.delete_video_from_userdata("loops.mp4")
+    assert not utils.VideoManager.filename_exists_in_userdata("loops.mp4")
 
 
 def test_delete_video_from_user_data_video_not_exist(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
     mocker.patch("app.utils.open")
-    utils.delete_video_from_userdata("ocr_training_video.mp4")
-    assert not utils.filename_exists_in_userdata("ocr_training_video.mp4")
+    utils.VideoManager.delete_video_from_userdata("ocr_training_video.mp4")
+    assert not utils.VideoManager.filename_exists_in_userdata("ocr_training_video.mp4")
 
 
 def test_delete_video_from_user_data_no_user_data(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=None)
-    utils.delete_video_from_userdata("hello_world.mp4")
-    assert not utils.filename_exists_in_userdata("hello_world.mp4")
+    utils.VideoManager.delete_video_from_userdata("hello_world.mp4")
+    assert not utils.VideoManager.filename_exists_in_userdata("hello_world.mp4")
 
 
 def test_format_youtube_video_name():
@@ -93,7 +93,7 @@ def test_format_youtube_video_name():
         None: None
     }
     for data in test_video_name_data:
-        assert utils.format_youtube_video_name(data) == test_video_name_data[data]
+        assert utils.VideoManager.format_youtube_video_name(data) == test_video_name_data[data]
 
 
 def test_get_file_extension_for_current_language(mocker):
@@ -133,14 +133,14 @@ def test_get_output_path(mocker):
 
 def test_file_already_exists_true(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
-    assert utils.file_already_exists("8e3fed7fc8b8620469ea36703a5dfa94")
+    assert utils.VideoManager.file_already_exists("8e3fed7fc8b8620469ea36703a5dfa94")
 
 
 def test_file_already_exists_false(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
-    assert not utils.file_already_exists("8ak5sa6sk4d5akj56dh7kdh9ad6648")
+    assert not utils.VideoManager.file_already_exists("8ak5sa6sk4d5akj56dh7kdh9ad6648")
 
 
 def test_file_already_exists_no_user_data(mocker):
     mocker.patch("app.utils.FileManager.read_user_data", return_value=None)
-    assert not utils.file_already_exists("4aj3sdl5a4k2sjd091u091j")
+    assert not utils.VideoManager.file_already_exists("4aj3sdl5a4k2sjd091u091j")
