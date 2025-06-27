@@ -150,6 +150,46 @@ class GeneralUtils:
         return programming_languages.get(current_language, ".txt")
     
 
+class FileManager:
+    @staticmethod
+    def write_to_file(content: str, file_path: str) -> Union[str, None]:
+        try:
+            with open(file_path, 'w') as file:
+                file.write(content)
+            logging.info(f"Data successfully written to {file_path}")
+            return file_path
+        except Exception as error:
+            logging.error(error)
+            return None
+
+    @staticmethod
+    def read_from_file(file_path: str) -> Union[str, None]:
+        try:
+            with open(file_path, "r") as file:
+                data = file.read()
+            if data != "":
+                return data
+        except Exception as error:
+            logging.error(error)
+        return None
+
+    @staticmethod
+    def read_user_data() -> Optional[dict]:
+        if not os.path.exists("data/userdata.json"):
+            if not os.path.exists("data/"):
+                os.makedirs("data/")
+            with open("data/userdata.json", "w") as user_data:
+                user_data.write(json.dumps({"all_videos": []}))
+            return None
+        try:
+            with open("data/userdata.json", "r") as user_data_json:
+                data = json.load(user_data_json)
+                return data
+        except JSONDecodeError:
+            logging.error("Failed to read data from userdata.json, file may be empty.")
+            return None
+
+
 def hash_video_file(filename: str) -> str:
     """
     Calculates and returns the hash of a video file.
@@ -161,27 +201,6 @@ def hash_video_file(filename: str) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
-def read_user_data() -> json:
-    """
-    Reads the users data from json file
-    :return: Returns user data as json
-    """
-    if not os.path.exists("data\\userdata.json"):
-        if not os.path.exists("data\\"):
-            os.makedirs("data\\")
-        with open("data\\userdata.json", "w") as user_data:
-            user_data.write(json.dumps({"all_videos": []}))
-            pass
-        return None
-    try:
-        with open("data\\userdata.json", "r") as user_data_json:
-            data = json.load(user_data_json)
-            return data
-    except JSONDecodeError:
-        logging.error("Failed to read data from userdata.json, file may be empty.")
-        return None
 
 
 def get_vid_save_path() -> str:
@@ -230,7 +249,7 @@ def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
     :param code_snippet: The code snippet to open
     :return: Returns True if successful
     """
-    file_path = write_to_file(code_snippet,
+    file_path = FileManager.write_to_file(code_snippet,
                               file_path=f"{get_output_path()}"
                                         f"{os.path.splitext(filename.replace(' ', '_'))[0]}"
                                         f"{GeneralUtils.get_file_extension_for_current_language()}")
@@ -245,46 +264,13 @@ def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
         return False
 
 
-def write_to_file(content: str, file_path: str) -> Union[str, None]:
-    """
-    Write text to file
-    :param content: Content to write to file.
-    :param file_path: File path
-    :return: Returns file path if successful else returns None
-    """
-    try:
-        with open(file_path, 'w') as file:
-            file.write(content)
-        logging.info(f"Data successfully written to {file_path}")
-        return file_path
-    except Exception as error:
-        logging.error(error)
-        return None
-
-
-def read_from_file(file_path: str) -> Union[str, None]:
-    """
-    Read data from file into string
-    :param file_path: File to read
-    :return: Returns string of data read from file or None
-    """
-    try:
-        with open(file_path, "r") as file:
-            data = file.read()
-        if data != "":
-            return data
-    except Exception as error:
-        logging.error(error)
-    return None
-
-
 def get_video_data(filename: str) -> []:
     """
     Get the video details from user data storage
     :param filename: Filename of video to retrieve details for
     :return: Returns array containing video info
     """
-    user_data = read_user_data()
+    user_data = FileManager.FileManager.read_user_data()
     if user_data is None:
         return None
     for current_video in user_data["all_videos"]:
@@ -320,7 +306,7 @@ def update_user_video_data(filename: str, progress: Optional[float] = None, capt
     :param progress: New progress value to update
     :param capture: New capture to append
     """
-    user_data = read_user_data()
+    user_data = FileManager.read_user_data()
     if user_data is None:
         return
     for record in user_data["all_videos"]:
@@ -341,7 +327,7 @@ def add_video_to_user_data(filename: str, video_title: str, video_hash: str, you
     :param video_title: Title (Alias) of new video
     :param video_hash: Hash value of new video file
     """
-    user_data = read_user_data()
+    user_data = FileManager.read_user_data()
     if user_data is None:
         return
     video_capture = cv2.VideoCapture(f'{get_vid_save_path()}{filename}')
@@ -383,7 +369,7 @@ def file_already_exists(video_hash: str) -> bool:
     :param video_hash: Hash value of video to check
     :return: Returns boolean, true if found
     """
-    user_data = read_user_data()
+    user_data = FileManager.read_user_data()
     if user_data is None:
         return False
     for record in user_data["all_videos"]:
@@ -397,7 +383,7 @@ def parse_video_data() -> []:
     Gets all video data from userdata storage and parses all data for in progress videos
     :return: Array containing two arrays, 1 with all videos 1 with in progress videos
     """
-    user_data = read_user_data()
+    user_data = FileManager.read_user_data()
     if user_data is not None:
         continue_watching = []
         all_videos = user_data["all_videos"]
@@ -466,7 +452,7 @@ def filename_exists_in_userdata(filename: str) -> bool:
     :param filename: filename to check for
     :return: Bool returns true if found
     """
-    user_data = read_user_data()
+    user_data = FileManager.read_user_data()
     if user_data is None:
         return False
     all_videos = user_data["all_videos"]
@@ -481,7 +467,7 @@ def delete_video_from_userdata(filename: str) -> None:
     Deletes a video from userdata.json file
     :param filename: Filename of video to delete
     """
-    user_data = read_user_data()
+    user_data = FileManager.read_user_data()
     if user_data is None:
         return
     all_videos = user_data["all_videos"]
