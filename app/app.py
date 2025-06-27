@@ -34,7 +34,7 @@ def index():
     Return the home page view/template with setup progress and parsed video data
     :return: Rendered template for home page
     """
-    parsed_video_data = utils.parse_video_data()
+    parsed_video_data = utils.VideoManager.parse_video_data()
     return render_template("index.html",
                            continue_watching=parsed_video_data["continue_watching"],
                            all_videos=parsed_video_data["all_videos"],
@@ -95,7 +95,7 @@ def upload():
     :return: Rendered template for upload page
     """
     return render_template("upload.html",
-                           use_youtube_downloader=eval(utils.config("Features", "use_youtube_downloader")))
+                           use_youtube_downloader=eval(utils.ConfigManager.load("Features", "use_youtube_downloader")))
 
 
 @app.route("/videos")
@@ -104,7 +104,7 @@ def serve_video():
     Serve local/downloaded video file to view/template
     :return: Video file
     """
-    video_path = f'{utils.get_vid_save_path()}{filename}'
+    video_path = f'{utils.VideoManager.get_vid_save_path()}{filename}'
     return send_file(video_path)
 
 
@@ -116,7 +116,7 @@ def upload_youtube_id(video_id: str):
     :return: Redirect to appropriate page after downloading or failing
     """
     youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-    return redirect(utils.download_youtube_video(youtube_url))
+    return redirect(utils.VideoManager.download_youtube_video(youtube_url))
 
 
 @app.route('/capture_at_timestamp', methods=['POST'])
@@ -137,7 +137,7 @@ def send_to_ide():
     """
     code = request.get_json().get("code_snippet")
     unescaped_code = html.unescape(code)
-    if utils.send_code_snippet_to_ide(filename, unescaped_code):
+    if utils.VideoManager.send_code_snippet_to_ide(filename, unescaped_code):
         return "success"
     else:
         return "fail"
@@ -151,10 +151,10 @@ def update_video_data():
     """
     data = request.get_json()
     if "progress" in data:
-        utils.update_user_video_data(filename, progress=data["progress"])
+        utils.VideoManager.update_user_video_data(filename, progress=data["progress"])
         return "success"
     elif "capture" in data:
-        utils.update_user_video_data(filename, capture=data["capture"])
+        utils.VideoManager.update_user_video_data(filename, capture=data["capture"])
         return "success"
     else:
         logging.error("No compatible data type to update")
@@ -171,22 +171,22 @@ def upload_video():
     file = request.files["localFileInput"]
     # TODO: Move this into separate function, too messy to have this logic in route method
     if file:
-        if not os.path.exists(f"{utils.get_vid_save_path()}"):
-            os.makedirs(f"{utils.get_vid_save_path()}")
-        file.save(f"{utils.get_vid_save_path()}" + file.filename)
+        if not os.path.exists(f"{utils.VideoManager.get_vid_save_path()}"):
+            os.makedirs(f"{utils.VideoManager.get_vid_save_path()}")
+        file.save(f"{utils.VideoManager.get_vid_save_path()}" + file.filename)
         global filename
         filename = file.filename
-        file_hash = utils.hash_video_file(filename)
-        if utils.file_already_exists(file_hash):
+        file_hash = utils.VideoManager.hash_video_file(filename)
+        if utils.VideoManager.file_already_exists(file_hash):
             return redirect(f"/play_video/{filename}")
         video_title = request.form.get("videoTitle")
         if video_title:
-            utils.add_video_to_user_data(filename, video_title, file_hash)
+            utils.VideoManager.add_video_to_user_data(filename, video_title, file_hash)
         else:
-            utils.add_video_to_user_data(filename, filename, file_hash)
+            utils.VideoManager.add_video_to_user_data(filename, filename, file_hash)
         return redirect(f"/play_video/{filename}")
     elif youtube_url:
-        return redirect(utils.download_youtube_video(youtube_url))
+        return redirect(utils.VideoManager.download_youtube_video(youtube_url))
     logging.error("Failed to upload video file")
     return redirect("/upload")
 
@@ -198,10 +198,11 @@ def video(play_filename):
     :param play_filename: Filename/video to play
     :return: Rendered template of video player
     """
-    if utils.filename_exists_in_userdata(play_filename):
+    if utils.VideoManager.filename_exists_in_userdata(play_filename):
         global filename
         filename = play_filename
-        return render_template("player.html", filename=filename, video_data=utils.get_video_data(filename))
+        return render_template("player.html", filename=filename,
+                               video_data=utils.VideoManager.get_video_data(filename))
     return redirect("/")
 
 
@@ -212,8 +213,8 @@ def delete_video(delete_filename):
     :param delete_filename: Filename/video to delete
     :return: Redirect to home page
     """
-    if utils.filename_exists_in_userdata(delete_filename):
-        utils.delete_video_from_userdata(delete_filename)
+    if utils.VideoManager.filename_exists_in_userdata(delete_filename):
+        utils.VideoManager.delete_video_from_userdata(delete_filename)
     return redirect("/")
 
 
