@@ -11,7 +11,8 @@ def test_parse_command_clear():
 
 
 def test_parse_command_help(mocker):
-    mocker.patch("app.utils.read_from_file", return_value="dummy help menu")
+    # mocker.patch("app.utils.FileManager.read_from_file", return_value="dummy help menu")
+    mocker.patch("app.utils.FileManager.read_from_file", return_value="dummy help menu")
     assert web_cli.parse_command("help") == "dummy help menu"
 
 
@@ -55,12 +56,12 @@ def test_parse_command_navigate_settings():
 
 
 def test_parse_command_play_video_valid(mocker):
-    mocker.patch("app.utils.filename_exists_in_userdata", return_value=True)
+    mocker.patch("app.utils.VideoManager.filename_exists_in_userdata", return_value=True)
     assert web_cli.parse_command("play-video my_video.mp4") == {"play_video": "my_video.mp4"}
 
 
 def test_parse_command_play_video_invalid_video(mocker):
-    mocker.patch("app.utils.filename_exists_in_userdata", return_value=False)
+    mocker.patch("app.utils.VideoManager.filename_exists_in_userdata", return_value=False)
     assert web_cli.parse_command("play-video bad_video.mp4") == "<span class=\"text-red-500\">Failed to open video " \
                                                                 "\"bad_video.mp4\", file does not exist</span>"
 
@@ -71,7 +72,7 @@ def test_parse_command_invalid_command():
 
 
 def test_available_videos(mocker):
-    mocker.patch("app.utils.read_user_data", return_value=load_dummy_user_data())
+    mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
     available_videos = web_cli.available_videos()
     assert available_videos[0] == "oop.mp4"
     assert available_videos[1] == "loops.mp4"
@@ -79,12 +80,12 @@ def test_available_videos(mocker):
 
 
 def test_available_videos_none(mocker):
-    mocker.patch("app.utils.read_user_data", return_value=None)
+    mocker.patch("app.utils.FileManager.read_user_data", return_value=None)
     assert web_cli.available_videos() == {}
 
 
 def test_list_videos(mocker):
-    mocker.patch("app.utils.read_user_data", return_value=load_dummy_user_data())
+    mocker.patch("app.utils.FileManager.read_user_data", return_value=load_dummy_user_data())
     list_videos = web_cli.list_videos()
     assert "oop.mp4" in list_videos
     assert "loops.mp4" in list_videos
@@ -92,5 +93,5 @@ def test_list_videos(mocker):
 
 
 def test_list_videos_empty(mocker):
-    mocker.patch("app.utils.read_user_data", return_value=None)
+    mocker.patch("app.utils.FileManager.read_user_data", return_value=None)
     assert web_cli.list_videos() == "<p class='text-red-500'>No videos found in your library.<p>"

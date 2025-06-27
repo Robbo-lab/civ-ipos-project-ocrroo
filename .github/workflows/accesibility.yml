@@ -39,12 +39,13 @@ jobs:
         working-directory: ./app
         run: |
           export FLASK_APP=app.py
+          # bind to all interfaces
           flask run -h localhost -p 5000 &
       
       # Run accessibility-checker
       - name: Run accessibility-checker
         run: |
-          sleep 10
-          achecker http://localhost:5000 
-          achecker http://localhost:5000/upload 
+          sleep 2
+          achecker http://localhost:5000
+          achecker http://localhost:5000/upload
           achecker http://localhost:5000/settings
