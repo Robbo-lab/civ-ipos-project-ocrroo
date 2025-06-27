@@ -4,7 +4,7 @@ import pytesseract
 import logging
 from typing import Union
 import utils
-from utils import config
+from utils import ConfigManager
 
 
 class ExtractText:
@@ -42,13 +42,13 @@ class ExtractText:
         :param extracted_text: Raw OCR text to format
         :return: Formatted text as string
         """
-        language = config("UserSettings", "programming_language")
+        language = ConfigManager.load("UserSettings", "programming_language")
         formatted_text = extracted_text
-        if config("Formatting", "openai_analysis"):
+        if ConfigManager.load("Formatting", "openai_analysis"):
             formatted_text = ExtractText.openai_format_raw_ocr(formatted_text, language)
-        if config("Formatting", "remove_backticks"):
+        if ConfigManager.load("Formatting", "remove_backticks"):
             formatted_text = formatted_text.replace("```", "")
-        if config("Formatting", "remove_language_name"):
+        if ConfigManager.load("Formatting", "remove_language_name"):
             formatted_text = formatted_text.replace(language, "", 1)
         return formatted_text
 
