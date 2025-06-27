@@ -37,7 +37,8 @@ def index():
     parsed_video_data = utils.parse_video_data()
     return render_template("index.html",
                            continue_watching=parsed_video_data["continue_watching"],
-                           all_videos=parsed_video_data["all_videos"], setup_progress=utils.ConfigManager.get_setup_progress)
+                           all_videos=parsed_video_data["all_videos"],
+                           setup_progress=utils.ConfigManager.get_setup_progress)
 
 
 @app.route("/settings")

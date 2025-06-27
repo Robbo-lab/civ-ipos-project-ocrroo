@@ -1,5 +1,4 @@
 from app import web_cli
-from app import utils
 from tests.test_utils import load_dummy_user_data
 
 

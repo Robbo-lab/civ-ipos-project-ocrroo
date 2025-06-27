@@ -20,8 +20,8 @@ class ConfigManager:
     def load(section: str = None, option: str = None) -> Union[ConfigParser, str]:
         """
         Loads config variables from file and returns either specified variable or parser object. If attempting to
-        retrieve a specified variable, BOTH section and option parameters must be passed. If no parameters are specified,
-        this function will return a ConfigParser object.
+        retrieve a specified variable, BOTH section and option parameters must be passed. If no parameters are
+        specified, this function will return a ConfigParser object.
         :param section: [Optional] Section to retrieve value from
         :param option: [Optional] Key/option of value to retrieve
         :return: Return string or ConfigParser object
@@ -187,7 +187,7 @@ class GeneralUtils:
             'sass': '.sass', 'less': '.less', 'markdown': '.md', 'latex': '.tex'
         }
         return programming_languages.get(current_language, ".txt")
-    
+
 
 class FileManager:
     @staticmethod
@@ -228,7 +228,7 @@ class FileManager:
         """
         Reads the users data from json file
         :return: Returns user data as json
-        """        
+        """
         if not os.path.exists("data/userdata.json"):
             if not os.path.exists("data/"):
                 os.makedirs("data/")
