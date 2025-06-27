@@ -18,6 +18,14 @@ from configparser import ConfigParser
 class ConfigManager:
     @staticmethod
     def load(section: str = None, option: str = None) -> Union[ConfigParser, str]:
+        """
+        Loads config variables from file and returns either specified variable or parser object. If attempting to
+        retrieve a specified variable, BOTH section and option parameters must be passed. If no parameters are specified,
+        this function will return a ConfigParser object.
+        :param section: [Optional] Section to retrieve value from
+        :param option: [Optional] Key/option of value to retrieve
+        :return: Return string or ConfigParser object
+        """
         if (section is None) != (option is None):
             raise SyntaxError("section AND option parameters OR no parameters must be passed to function config()")
         parser = ConfigParser()
@@ -35,6 +43,10 @@ class ConfigManager:
 
     @staticmethod
     def update(new_values_dict) -> None:
+        """
+        Updates the configuration file with what has been passed in the front end.
+        :param new_values_dict: values input into dictionary to update config file
+        """
         config_file = ConfigManager.load()
         for section, section_data in new_values_dict.items():
             if section not in config_file:
@@ -48,6 +60,10 @@ class ConfigManager:
 
     @staticmethod
     def get_current_settings() -> dict:
+        """
+        gets the current settings stored withing the config.ini page and passes the values
+        to the /settings route
+        """
         config_file = ConfigManager.load()
         return {
             'AppSettings': {
@@ -68,6 +84,11 @@ class ConfigManager:
 
     @staticmethod
     def extract_form_values(request):
+        """
+        Extracts form values from a Flask request object and returns them in a structured dictionary.
+        :param request: Flask request object containing form data.
+        :return: Dictionary with structured config values.
+        """
         new_username = str(request.form.get('username'))
         if new_username == '':
             new_username = 'None'
@@ -106,6 +127,10 @@ class ConfigManager:
 
     @staticmethod
     def get_setup_progress() -> [str]:
+        """
+        Gets users set up progress from config file
+        :return: Returns array of string containing strings relating to settings that are already set up
+        """
         config_parser = ConfigManager.load()
         setup_progress = []
         if config_parser.get("AppSettings", "tesseract_executable") != "your_path_to_tesseract_here":
@@ -122,18 +147,32 @@ class ConfigManager:
 class GeneralUtils:
     @staticmethod
     def hash_string(str_input: str) -> str:
+        """
+        Calculate md5 hash of string.
+        :param str_input: String to hash
+        :return: Returns hex based md5 hash as str
+        """
         hash_md5 = hashlib.md5()
         hash_md5.update(str_input.encode('utf-8'))
         return hash_md5.hexdigest()
 
     @staticmethod
     def format_timestamp(seconds: int) -> str:
+        """
+        Format a timestamp from seconds to standard format (HH:MM)
+        :param seconds: Timestamp to format
+        :return: Returns formatted timestamp as a string
+        """
         minutes = seconds // 60
         remaining_seconds = seconds % 60
         return f'{str(minutes).zfill(2)}:{str(remaining_seconds).zfill(2)}'
 
     @staticmethod
     def get_file_extension_for_current_language() -> str:
+        """
+        Get the file extension of the users current programming language
+        :return: file extension as string
+        """
         current_language = ConfigManager.load("UserSettings", "programming_language").lower()
         programming_languages = {
             'python': '.py', 'javascript': '.js', 'java': '.java', 'c': '.c', 'c++': '.h', 'c#': '.cs',
@@ -153,6 +192,12 @@ class GeneralUtils:
 class FileManager:
     @staticmethod
     def write_to_file(content: str, file_path: str) -> Union[str, None]:
+        """
+        Write text to file
+        :param content: Content to write to file.
+        :param file_path: File path
+        :return: Returns file path if successful else returns None
+        """
         try:
             with open(file_path, 'w') as file:
                 file.write(content)
@@ -164,6 +209,11 @@ class FileManager:
 
     @staticmethod
     def read_from_file(file_path: str) -> Union[str, None]:
+        """
+        Read data from file into string
+        :param file_path: File to read
+        :return: Returns string of data read from file or None
+        """
         try:
             with open(file_path, "r") as file:
                 data = file.read()
@@ -175,6 +225,10 @@ class FileManager:
 
     @staticmethod
     def read_user_data() -> Optional[dict]:
+        """
+        Reads the users data from json file
+        :return: Returns user data as json
+        """        
         if not os.path.exists("data/userdata.json"):
             if not os.path.exists("data/"):
                 os.makedirs("data/")
@@ -193,6 +247,11 @@ class FileManager:
 class VideoManager:
     @staticmethod
     def hash_video_file(filename: str) -> str:
+        """
+        Calculates and returns the hash of a video file.
+        :param filename: File path of the video to hash
+        :return: Returns hex based md5 hash
+        """
         hash_md5 = hashlib.md5()
         with open(f"{VideoManager.get_vid_save_path()}{filename}", "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -201,6 +260,10 @@ class VideoManager:
 
     @staticmethod
     def get_vid_save_path() -> str:
+        """
+        Returns output path from config variables, will set default to root of project\\out\\videos\\
+        :return: file path as string
+        """
         vid_download_path = ConfigManager.load("UserSettings", "video_save_path")
         if vid_download_path == "output_path":
             default_path = os.path.dirname(os.getcwd()) + "/out/videos/"
@@ -213,6 +276,10 @@ class VideoManager:
 
     @staticmethod
     def get_output_path() -> str:
+        """
+        Returns output path from config variables, will set default to root of project\\out
+        :return: file path as string
+        """
         output_path = ConfigManager.load("UserSettings", "capture_output_path")
         if output_path == "output_path":
             default_path = os.path.dirname(os.getcwd()) + "/out/"
@@ -225,6 +292,12 @@ class VideoManager:
 
     @staticmethod
     def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
+        """
+        Opens a code snippet in users default IDE
+        :param filename: The filename to write snippet to file
+        :param code_snippet: The code snippet to open
+        :return: Returns True if successful
+        """
         file_path = FileManager.write_to_file(
             code_snippet,
             file_path=f"{VideoManager.get_output_path()}"
@@ -243,6 +316,11 @@ class VideoManager:
 
     @staticmethod
     def get_video_data(filename: str) -> Optional[dict]:
+        """
+        Get the video details from user data storage
+        :param filename: Filename of video to retrieve details for
+        :return: Returns array containing video info
+        """
         user_data = FileManager.read_user_data()
         if user_data is None:
             return None
@@ -256,6 +334,10 @@ class VideoManager:
 
     @staticmethod
     def is_video_downloaded(filename: str) -> Optional[bool]:
+        """
+        Returns boolean if video is downloaded by checking user data storage
+        :param filename: Filename of video to check
+        """
         current_video = VideoManager.get_video_data(filename)
         if current_video is None:
             return None
@@ -265,6 +347,12 @@ class VideoManager:
 
     @staticmethod
     def update_user_video_data(filename: str, progress: Optional[float] = None, capture: Optional[dict] = None) -> None:
+        """
+        Updates progress or capture content information in user data storage for specific video
+        :param filename: Filename of video to update
+        :param progress: New progress value to update
+        :param capture: New capture to append
+        """
         user_data = FileManager.read_user_data()
         if user_data is None:
             return
@@ -279,6 +367,13 @@ class VideoManager:
 
     @staticmethod
     def add_video_to_user_data(filename: str, video_title: str, video_hash: str, youtube_url: str = None) -> None:
+        """
+        Add a new video to user data storage
+        :param youtube_url: Optional, if video is from YouTube, adds its source url to user data
+        :param filename: File path of new video to add
+        :param video_title: Title (Alias) of new video
+        :param video_hash: Hash value of new video file
+        """
         user_data = FileManager.read_user_data()
         if user_data is None:
             return
@@ -315,6 +410,11 @@ class VideoManager:
 
     @staticmethod
     def file_already_exists(video_hash: str) -> bool:
+        """
+        Checks if file already exists in the application
+        :param video_hash: Hash value of video to check
+        :return: Returns boolean, true if found
+        """
         user_data = FileManager.read_user_data()
         if user_data is None:
             return False
@@ -325,6 +425,10 @@ class VideoManager:
 
     @staticmethod
     def parse_video_data() -> dict:
+        """
+        Gets all video data from userdata storage and parses all data for in progress videos
+        :return: Array containing two arrays, 1 with all videos 1 with in progress videos
+        """
         user_data = FileManager.read_user_data()
         if user_data is not None:
             continue_watching = []
@@ -346,6 +450,11 @@ class VideoManager:
 
     @staticmethod
     def download_youtube_video(video_url: str) -> str:
+        """
+        Download a video from YouTube and save to local device
+        :param video_url: URL of video to download
+        :return: Returns app url for function to redirect to
+        """
         try:
             yt_video = YouTube(video_url)
             yt_stream = yt_video.streams.filter(res="720p", mime_type="video/mp4", progressive=True).first()
@@ -364,6 +473,12 @@ class VideoManager:
 
     @staticmethod
     def format_youtube_video_name(filename: str) -> Union[str, None]:
+        """
+        Formats a given string to remove trailing/leading white space and remove multiple spaces between words, replaces
+        spaces with underscores.
+        :param filename: Un-formatted video name
+        :return: Formatted video name
+        """
         if filename is None:
             return None
         file_extension = ""
@@ -378,6 +493,11 @@ class VideoManager:
 
     @staticmethod
     def filename_exists_in_userdata(filename: str) -> bool:
+        """
+        Checks if file name exists in userdata.json file
+        :param filename: filename to check for
+        :return: Bool returns true if found
+        """
         user_data = FileManager.read_user_data()
         if user_data is None:
             return False
@@ -389,6 +509,10 @@ class VideoManager:
 
     @staticmethod
     def delete_video_from_userdata(filename: str) -> None:
+        """
+        Deletes a video from userdata.json file
+        :param filename: Filename of video to delete
+        """
         user_data = FileManager.read_user_data()
         if user_data is None:
             return
