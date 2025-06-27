@@ -190,290 +190,212 @@ class FileManager:
             return None
 
 
-def hash_video_file(filename: str) -> str:
-    """
-    Calculates and returns the hash of a video file.
-    :param filename: File path of the video to hash
-    :return: Returns hex based md5 hash
-    """
-    hash_md5 = hashlib.md5()
-    with open(f"{get_vid_save_path()}{filename}", "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
+class VideoManager:
+    @staticmethod
+    def hash_video_file(filename: str) -> str:
+        hash_md5 = hashlib.md5()
+        with open(f"{VideoManager.get_vid_save_path()}{filename}", "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
 
+    @staticmethod
+    def get_vid_save_path() -> str:
+        vid_download_path = ConfigManager.load("UserSettings", "video_save_path")
+        if vid_download_path == "output_path":
+            default_path = os.path.dirname(os.getcwd()) + "/out/videos/"
+            if not os.path.exists(default_path):
+                os.makedirs(default_path)
+            return default_path
+        if not vid_download_path.endswith("/"):
+            vid_download_path += "/"
+        return vid_download_path
 
-def get_vid_save_path() -> str:
-    """
-    Returns output path from config variables, will set default to root of project\\out\\videos\\
-    :return: file path as string
-    """
-    vid_download_path = GeneralUtils.config("UserSettings", "video_save_path")
-    # Set default output path for video download path
-    if vid_download_path == "output_path":
-        default_path = os.path.dirname(os.getcwd()) + "\\out\\videos\\"
-        if not os.path.exists(default_path):
-            os.makedirs(default_path)
-        return default_path
-    # Check if the path ends with a backslash
-    if not vid_download_path.endswith("\\"):
-        # If it doesn't end with a backslash, append one
-        vid_download_path += "\\"
+    @staticmethod
+    def get_output_path() -> str:
+        output_path = ConfigManager.load("UserSettings", "capture_output_path")
+        if output_path == "output_path":
+            default_path = os.path.dirname(os.getcwd()) + "/out/"
+            if not os.path.exists(default_path):
+                os.makedirs(default_path)
+            return default_path
+        if not output_path.endswith("/"):
+            output_path += "/"
+        return output_path
 
-    return vid_download_path
-
-
-def get_output_path() -> str:
-    """
-    Returns output path from config variables, will set default to root of project\\out
-    :return: file path as string
-    """
-    output_path = GeneralUtils.config("UserSettings", "capture_output_path")
-    # Set default output path for code files
-    if output_path == "output_path":
-        default_path = os.path.dirname(os.getcwd()) + "\\out\\"
-        if not os.path.exists(default_path):
-            os.makedirs(default_path)
-        return default_path
-    # Check if the path ends with a backslash
-    if not output_path.endswith("\\"):
-        # If it doesn't end with a backslash, append one
-        output_path += "\\"
-    return output_path
-
-
-def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
-    """
-    Opens a code snippet in users default IDE
-    :param filename: The filename to write snippet to file
-    :param code_snippet: The code snippet to open
-    :return: Returns True if successful
-    """
-    file_path = FileManager.write_to_file(code_snippet,
-                              file_path=f"{get_output_path()}"
-                                        f"{os.path.splitext(filename.replace(' ', '_'))[0]}"
-                                        f"{GeneralUtils.get_file_extension_for_current_language()}")
-    if file_path is None:
-        return False
-    try:
-        subprocess.run([config("AppSettings", "ide_executable"), file_path], shell=True)
-        logging.info("Successfully opened code snippet in IDE")
-        return True
-    except subprocess.SubprocessError as error:
-        logging.error(error)
-        return False
-
-
-def get_video_data(filename: str) -> []:
-    """
-    Get the video details from user data storage
-    :param filename: Filename of video to retrieve details for
-    :return: Returns array containing video info
-    """
-    user_data = FileManager.FileManager.read_user_data()
-    if user_data is None:
-        return None
-    for current_video in user_data["all_videos"]:
-        if current_video["filename"] == filename:
-            current_video["video_length"] = ConfigManager.format_timestamp(current_video["video_length"])
-            for current_capture in current_video["captures"]:
-                current_capture["timestamp"] = ConfigManager.format_timestamp(current_capture["timestamp"])
-            return current_video
-    return None
-
-
-def is_video_downloaded(filename: str) -> Optional[bool]:
-    """
-        Returns boolean if video is downloaded by checking user data storage
-        :param filename: Filename of video to check
-    """
-    current_video = get_video_data(filename)
-
-    if current_video is None:
-        return None
-
-    # Check if the video has a youtube url in the userdata file.
-    if "youtube_url" not in current_video:
-        return False
-
-    return True
-
-
-def update_user_video_data(filename: str, progress: Optional[float] = None, capture: Optional[dict] = None) -> None:
-    """
-    Updates progress or capture content information in user data storage for specific video
-    :param filename: Filename of video to update
-    :param progress: New progress value to update
-    :param capture: New capture to append
-    """
-    user_data = FileManager.read_user_data()
-    if user_data is None:
-        return
-    for record in user_data["all_videos"]:
-        if record["filename"] == filename:
-            if progress is not None:
-                record["progress"] = round(progress)
-            if capture is not None:
-                record["captures"].append(capture)
-    with open("data/userdata.json", "w") as json_data:
-        json.dump(user_data, json_data, indent=4)
-
-
-def add_video_to_user_data(filename: str, video_title: str, video_hash: str, youtube_url: str = None) -> None:
-    """
-    Add a new video to user data storage
-    :param youtube_url: Optional, if video is from YouTube, adds its source url to user data
-    :param filename: File path of new video to add
-    :param video_title: Title (Alias) of new video
-    :param video_hash: Hash value of new video file
-    """
-    user_data = FileManager.read_user_data()
-    if user_data is None:
-        return
-    video_capture = cv2.VideoCapture(f'{get_vid_save_path()}{filename}')
-    if not video_capture.isOpened():
-        logging.error(f"Failed to open video capture for {filename}")
-        return
-    middle_frame = round(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / 2)
-    video_capture.set(cv2.CAP_PROP_POS_FRAMES, middle_frame)
-    ret, frame = video_capture.read()
-    if not ret:
-        logging.error(f"Could not capture frame from video {filename}")
-        video_capture.release()
-        return
-    thumbnail = str(int(time.time())) + ".png"
-    # Check if img dir exists if not create
-    if not os.path.exists("static/img"):
-        os.makedirs("static/img")
-    cv2.imwrite(f"static/img/{thumbnail}", frame)
-    new_video = {
-        "video_hash": video_hash,
-        "filename": filename,
-        "alias": video_title,
-        "thumbnail": thumbnail,
-        "video_length": round(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / video_capture.get(cv2.CAP_PROP_FPS)),
-        "progress": 0,
-        "captures": [],
-    }
-    if youtube_url is not None:
-        new_video["youtube_url"] = youtube_url
-    video_capture.release()
-    user_data["all_videos"].append(new_video)
-    with open("data/userdata.json", "w") as json_data:
-        json.dump(user_data, json_data, indent=4)
-
-
-def file_already_exists(video_hash: str) -> bool:
-    """
-    Checks if file already exists in the application
-    :param video_hash: Hash value of video to check
-    :return: Returns boolean, true if found
-    """
-    user_data = FileManager.read_user_data()
-    if user_data is None:
-        return False
-    for record in user_data["all_videos"]:
-        if record["video_hash"] == video_hash:
+    @staticmethod
+    def send_code_snippet_to_ide(filename: str, code_snippet: str) -> bool:
+        file_path = FileManager.write_to_file(
+            code_snippet,
+            file_path=f"{VideoManager.get_output_path()}"
+                      f"{os.path.splitext(filename.replace(' ', '_'))[0]}"
+                      f"{GeneralUtils.get_file_extension_for_current_language()}"
+        )
+        if file_path is None:
+            return False
+        try:
+            subprocess.run([ConfigManager.load("AppSettings", "ide_executable"), file_path], shell=True)
+            logging.info("Successfully opened code snippet in IDE")
             return True
-    return False
+        except subprocess.SubprocessError as error:
+            logging.error(error)
+            return False
 
+    @staticmethod
+    def get_video_data(filename: str) -> Optional[dict]:
+        user_data = FileManager.read_user_data()
+        if user_data is None:
+            return None
+        for current_video in user_data["all_videos"]:
+            if current_video["filename"] == filename:
+                current_video["video_length"] = GeneralUtils.format_timestamp(current_video["video_length"])
+                for current_capture in current_video["captures"]:
+                    current_capture["timestamp"] = GeneralUtils.format_timestamp(current_capture["timestamp"])
+                return current_video
+        return None
 
-def parse_video_data() -> []:
-    """
-    Gets all video data from userdata storage and parses all data for in progress videos
-    :return: Array containing two arrays, 1 with all videos 1 with in progress videos
-    """
-    user_data = FileManager.read_user_data()
-    if user_data is not None:
-        continue_watching = []
+    @staticmethod
+    def is_video_downloaded(filename: str) -> Optional[bool]:
+        current_video = VideoManager.get_video_data(filename)
+        if current_video is None:
+            return None
+        if "youtube_url" not in current_video:
+            return False
+        return True
+
+    @staticmethod
+    def update_user_video_data(filename: str, progress: Optional[float] = None, capture: Optional[dict] = None) -> None:
+        user_data = FileManager.read_user_data()
+        if user_data is None:
+            return
+        for record in user_data["all_videos"]:
+            if record["filename"] == filename:
+                if progress is not None:
+                    record["progress"] = round(progress)
+                if capture is not None:
+                    record["captures"].append(capture)
+        with open("data/userdata.json", "w") as json_data:
+            json.dump(user_data, json_data, indent=4)
+
+    @staticmethod
+    def add_video_to_user_data(filename: str, video_title: str, video_hash: str, youtube_url: str = None) -> None:
+        user_data = FileManager.read_user_data()
+        if user_data is None:
+            return
+        video_capture = cv2.VideoCapture(f'{VideoManager.get_vid_save_path()}{filename}')
+        if not video_capture.isOpened():
+            logging.error(f"Failed to open video capture for {filename}")
+            return
+        middle_frame = round(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / 2)
+        video_capture.set(cv2.CAP_PROP_POS_FRAMES, middle_frame)
+        ret, frame = video_capture.read()
+        if not ret:
+            logging.error(f"Could not capture frame from video {filename}")
+            video_capture.release()
+            return
+        thumbnail = str(int(time.time())) + ".png"
+        if not os.path.exists("static/img"):
+            os.makedirs("static/img")
+        cv2.imwrite(f"static/img/{thumbnail}", frame)
+        new_video = {
+            "video_hash": video_hash,
+            "filename": filename,
+            "alias": video_title,
+            "thumbnail": thumbnail,
+            "video_length": round(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / video_capture.get(cv2.CAP_PROP_FPS)),
+            "progress": 0,
+            "captures": [],
+        }
+        if youtube_url is not None:
+            new_video["youtube_url"] = youtube_url
+        video_capture.release()
+        user_data["all_videos"].append(new_video)
+        with open("data/userdata.json", "w") as json_data:
+            json.dump(user_data, json_data, indent=4)
+
+    @staticmethod
+    def file_already_exists(video_hash: str) -> bool:
+        user_data = FileManager.read_user_data()
+        if user_data is None:
+            return False
+        for record in user_data["all_videos"]:
+            if record["video_hash"] == video_hash:
+                return True
+        return False
+
+    @staticmethod
+    def parse_video_data() -> dict:
+        user_data = FileManager.read_user_data()
+        if user_data is not None:
+            continue_watching = []
+            all_videos = user_data["all_videos"]
+            for current_video in all_videos:
+                if current_video["progress"] < current_video["video_length"]:
+                    current_video["progress_percent"] = \
+                        round((current_video["progress"] / current_video["video_length"]) * 100)
+                    current_video["progress"] = GeneralUtils.format_timestamp(current_video["progress"])
+                    continue_watching.append(current_video)
+                current_video["video_length"] = GeneralUtils.format_timestamp(current_video["video_length"])
+        else:
+            continue_watching = None
+            all_videos = None
+        return {
+            "all_videos": all_videos,
+            "continue_watching": continue_watching
+        }
+
+    @staticmethod
+    def download_youtube_video(video_url: str) -> str:
+        try:
+            yt_video = YouTube(video_url)
+            yt_stream = yt_video.streams.filter(res="720p", mime_type="video/mp4", progressive=True).first()
+            if yt_stream:
+                yt_filename = VideoManager.format_youtube_video_name(yt_stream.default_filename)
+                yt_stream.download(output_path=VideoManager.get_vid_save_path(), filename=yt_filename)
+                filename = yt_filename
+                file_hash = VideoManager.hash_video_file(filename)
+                if VideoManager.file_already_exists(file_hash):
+                    return f"/play_video/{filename}"
+                VideoManager.add_video_to_user_data(filename, filename, file_hash, youtube_url=video_url)
+                return f"/play_video/{filename}"
+        except RegexMatchError as error:
+            logging.error(f"Failed to download from youtube with error: {error}")
+        return "/upload"
+
+    @staticmethod
+    def format_youtube_video_name(filename: str) -> Union[str, None]:
+        if filename is None:
+            return None
+        file_extension = ""
+        if "." in filename:
+            file_extension = filename[filename.rindex("."):].strip()
+            filename = filename.replace(file_extension, "")
+        while True:
+            if "  " in filename:
+                filename = filename.replace("  ", " ")
+            else:
+                return f"{filename.strip().replace(' ', '_')}{file_extension}"
+
+    @staticmethod
+    def filename_exists_in_userdata(filename: str) -> bool:
+        user_data = FileManager.read_user_data()
+        if user_data is None:
+            return False
         all_videos = user_data["all_videos"]
         for current_video in all_videos:
-            if current_video["progress"] < current_video["video_length"]:
-                current_video["progress_percent"] = \
-                    round((current_video["progress"] / current_video["video_length"]) * 100)
-                current_video["progress"] = GeneralUtils.format_timestamp(current_video["progress"])
-                continue_watching.append(current_video)
-            current_video["video_length"] = GeneralUtils.format_timestamp(current_video["video_length"])
-    else:
-        continue_watching = None
-        all_videos = None
-    return {
-        "all_videos": all_videos,
-        "continue_watching": continue_watching
-    }
-
-
-def download_youtube_video(video_url: str) -> str:
-    """
-    Download a video from YouTube and save to local device
-    :param video_url: URL of video to download
-    :return: Returns app url for function to redirect to
-    """
-    try:
-        yt_video = YouTube(video_url)
-        yt_stream = yt_video.streams.filter(res="720p", mime_type="video/mp4", progressive=True).first()
-        if yt_stream:
-            yt_filename = format_youtube_video_name(yt_stream.default_filename)
-            yt_stream.download(output_path=get_vid_save_path(), filename=yt_filename)
-            filename = yt_filename
-            file_hash = hash_video_file(filename)
-            if file_already_exists(file_hash):
-                return f"/play_video/{filename}"
-            add_video_to_user_data(filename, filename, file_hash, youtube_url=video_url)
-            return f"/play_video/{filename}"
-    except RegexMatchError as error:
-        logging.error(f"Failed to download from youtube with error: {error}")
-    return "/upload"
-
-
-def format_youtube_video_name(filename: str) -> Union[str, None]:
-    """
-    Formats a given string to remove trailing/leading white space and remove multiple spaces between words, replaces
-    spaces with underscores.
-    :param filename: Un-formatted video name
-    :return: Formatted video name
-    """
-    if filename is None:
-        return None
-    file_extension = ""
-    if "." in filename:
-        file_extension = filename[filename.rindex("."):].strip()
-        filename = filename.replace(file_extension, "")
-    while True:
-        if "  " in filename:
-            filename = filename.replace("  ", " ")
-        else:
-            return f"{filename.strip().replace(' ', '_')}{file_extension}"
-
-
-def filename_exists_in_userdata(filename: str) -> bool:
-    """
-    Checks if file name exists in userdata.json file
-    :param filename: filename to check for
-    :return: Bool returns true if found
-    """
-    user_data = FileManager.read_user_data()
-    if user_data is None:
+            if current_video["filename"] == filename:
+                return True
         return False
-    all_videos = user_data["all_videos"]
-    for current_video in all_videos:
-        if current_video["filename"] == filename:
-            return True
-    return False
 
-
-def delete_video_from_userdata(filename: str) -> None:
-    """
-    Deletes a video from userdata.json file
-    :param filename: Filename of video to delete
-    """
-    user_data = FileManager.read_user_data()
-    if user_data is None:
-        return
-    all_videos = user_data["all_videos"]
-    for current_video in all_videos:
-        if current_video["filename"] == filename:
-            all_videos.remove(current_video)
-            break
-    with open("data/userdata.json", "w") as json_data:
-        json.dump(user_data, json_data, indent=4)
+    @staticmethod
+    def delete_video_from_userdata(filename: str) -> None:
+        user_data = FileManager.read_user_data()
+        if user_data is None:
+            return
+        all_videos = user_data["all_videos"]
+        for current_video in all_videos:
+            if current_video["filename"] == filename:
+                all_videos.remove(current_video)
+                break
+        with open("data/userdata.json", "w") as json_data:
+            json.dump(user_data, json_data, indent=4)

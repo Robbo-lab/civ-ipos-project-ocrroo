@@ -15,7 +15,7 @@ def parse_command(command: str) -> Union[str, dict]:
         return "clear"
     # Help menu command
     if command == "help":
-        return utils.read_from_file("static\\resources\\help_menu.html")
+        return utils.FileManager.read_from_file("static\\resources\\help_menu.html")
     # Capture frame command
     if command == "capture":
         return "capture"
@@ -54,7 +54,7 @@ def parse_split_command(command_original: str) -> Union[str, dict]:
         # Play video command
         if split_commands[0] == "play-video":
             play_filename = command_original[11:]
-            if utils.filename_exists_in_userdata(play_filename):
+            if utils.VideoManager.filename_exists_in_userdata(play_filename):
                 return {
                     "play_video": play_filename
                 }
@@ -69,7 +69,7 @@ def available_videos() -> {}:
     Returns dict of available videos to play
     :return: Dict containing video filenames
     """
-    user_data = utils.read_user_data()
+    user_data = utils.FileManager.read_user_data()
     if user_data is None:
         return {}
     all_videos = user_data["all_videos"]
@@ -85,7 +85,7 @@ def list_videos() -> str:
     :return: HTML formatted string of videos
     """
 
-    user_data = utils.read_user_data()
+    user_data = utils.FileManager.read_user_data()
     if user_data is None:
         return "<p class='text-red-500'>No videos found in your library.<p>"
     all_videos = user_data["all_videos"]
