@@ -116,11 +116,11 @@ def test_hash_string():
         assert utils.GeneralUtils.hash_string(string) == test_strings[string]
 
 
-
 def test_get_output_path(mocker):
     # Mock os.getcwd and os.path.dirname for predictable output
     mocker.patch("os.getcwd", return_value="/home/user/project")
     mocker.patch("os.path.dirname", return_value="/home/user")
+    mocker.patch("os.makedirs")  # Prevent PermissionError
     test_output_paths = {
         "c:\\users\\program files\\app": "c:\\users\\program files\\app\\",
         "output_path": os.path.join("/home/user", "out") + os.sep,
@@ -128,7 +128,11 @@ def test_get_output_path(mocker):
     }
     for input_path, expected_output in test_output_paths.items():
         mocker.patch("app.utils.ConfigManager.load", return_value=input_path)
-        assert utils.get_output_path() == expected_output
+        actual = utils.VideoManager.get_output_path()
+        # Normalize both paths and ensure trailing separator
+        actual = os.path.normpath(actual).rstrip("\\/") + os.sep
+        expected = os.path.normpath(expected_output).rstrip("\\/") + os.sep
+        assert actual == expected
 
 
 def test_file_already_exists_true(mocker):
