@@ -15,31 +15,108 @@ from pytube.exceptions import RegexMatchError
 from configparser import ConfigParser
 
 
-def config(section: str = None, option: str = None) -> Union[ConfigParser, str]:
-    """
-    Loads config variables from file and returns either specified variable or parser object. If attempting to
-    retrieve a specified variable, BOTH section and option parameters must be passed. If no parameters are specified,
-    this function will return a ConfigParser object.
-    :param section: [Optional] Section to retrieve value from
-    :param option: [Optional] Key/option of value to retrieve
-    :return: Return string or ConfigParser object
-    """
-    if (section is None) != (option is None):
-        raise SyntaxError("section AND option parameters OR no parameters must be passed to function config()")
-    parser = ConfigParser()
-    if not os.path.exists("config.ini"):
-        shutil.copy("config.example.ini", "config.ini")
-    parser.read("config.ini")
-    if parser.get("AppSettings", "openai_api_key") != "your_openai_api_key_here":
-        openai.api_key = parser.get("AppSettings", "openai_api_key")
-        # TODO: This only needs to be set once, unsure if calling this will cause any performance issues same for
-        #  pytesseract cmd dir below.
-    if parser.get("AppSettings", "tesseract_executable") != "your_path_to_tesseract_here":
-        pytesseract.pytesseract.tesseract_cmd = fr'{parser.get("AppSettings", "tesseract_executable")}'
-    if section is None and option is None:
-        return parser
-    else:
-        return parser.get(section, option)
+class ConfigManager:
+    @staticmethod
+    def load(section: str = None, option: str = None) -> Union[ConfigParser, str]:
+        if (section is None) != (option is None):
+            raise SyntaxError("section AND option parameters OR no parameters must be passed to function config()")
+        parser = ConfigParser()
+        if not os.path.exists("config.ini"):
+            shutil.copy("config.example.ini", "config.ini")
+        parser.read("config.ini")
+        if parser.get("AppSettings", "openai_api_key") != "your_openai_api_key_here":
+            openai.api_key = parser.get("AppSettings", "openai_api_key")
+        if parser.get("AppSettings", "tesseract_executable") != "your_path_to_tesseract_here":
+            pytesseract.pytesseract.tesseract_cmd = fr'{parser.get("AppSettings", "tesseract_executable")}'
+        if section is None and option is None:
+            return parser
+        else:
+            return parser.get(section, option)
+
+    @staticmethod
+    def update(new_values_dict) -> None:
+        config_file = ConfigManager.load()
+        for section, section_data in new_values_dict.items():
+            if section not in config_file:
+                config_file.add_section(section)
+            for key, value in section_data.items():
+                if isinstance(value, bool) or isinstance(value, int):
+                    value = str(value)
+                config_file.set(section, key, value)
+        with open('config.ini', 'w') as config_file_save:
+            config_file.write(config_file_save)
+
+    @staticmethod
+    def get_current_settings() -> dict:
+        config_file = ConfigManager.load()
+        return {
+            'AppSettings': {
+                'openai_api_key': config_file.get('AppSettings', 'openai_api_key'),
+                'ide_executable': config_file.get('AppSettings', 'ide_executable'),
+                'tesseract_executable': config_file.get('AppSettings', 'tesseract_executable'),
+            },
+            'UserSettings': {
+                'programming_language': config_file.get('UserSettings', 'programming_language'),
+                'output_path': config_file.get('UserSettings', 'capture_output_path'),
+                'mute_ui_sounds': config_file.get('UserSettings', 'mute_ui_sounds'),
+                'username': config_file.get('UserSettings', 'username'),
+            },
+            'Features': {
+                'use_youtube_downloader': config_file.get('Features', 'use_youtube_downloader')
+            }
+        }
+
+    @staticmethod
+    def extract_form_values(request):
+        new_username = str(request.form.get('username'))
+        if new_username == '':
+            new_username = 'None'
+        new_openai_api_key = str(request.form.get('openai_api_key'))
+        if new_openai_api_key == '':
+            new_openai_api_key = 'your_openai_api_key_here'
+        new_programming_language = str(request.form.get('programming_language'))
+        ui_sound_enabled = request.form.get('mute_ui_sounds') == 'True'
+        new_path_to_ide = str(request.form.get('ide_executable'))
+        if new_path_to_ide == '':
+            new_path_to_ide = 'your_path_to_ide_here'
+        new_path_to_tesseract = str(request.form.get('tesseract_executable'))
+        if new_path_to_tesseract == '':
+            new_path_to_tesseract = 'your_path_to_tesseract_here'
+        new_output_path = str(request.form.get('output_path'))
+        if new_output_path == '':
+            new_output_path = 'output_path'
+        youtube_downloader_enabled = request.form.get('use_youtube_downloader') == 'True'
+
+        return {
+            'AppSettings': {
+                'openai_api_key': new_openai_api_key,
+                'ide_executable': new_path_to_ide,
+                'tesseract_executable': new_path_to_tesseract,
+            },
+            'UserSettings': {
+                'programming_language': new_programming_language,
+                'output_path': new_output_path,
+                'mute_ui_sounds': ui_sound_enabled,
+                'username': new_username,
+            },
+            'Features': {
+                'use_youtube_downloader': youtube_downloader_enabled,
+            }
+        }
+
+    @staticmethod
+    def get_setup_progress() -> [str]:
+        config_parser = ConfigManager.load()
+        setup_progress = []
+        if config_parser.get("AppSettings", "tesseract_executable") != "your_path_to_tesseract_here":
+            setup_progress.append("tesseract")
+        if config_parser.get("AppSettings", "ide_executable") != "your_path_to_ide_here":
+            setup_progress.append("ide")
+        if config_parser.get("AppSettings", "openai_api_key") != "your_openai_api_key_here":
+            setup_progress.append("api")
+        if config_parser.get("UserSettings", "username") != "None":
+            setup_progress.append("username")
+        return setup_progress
 
 
 def hash_video_file(filename: str) -> str:
@@ -329,24 +406,6 @@ def file_already_exists(video_hash: str) -> bool:
     return False
 
 
-def get_setup_progress() -> [str]:
-    """
-    Gets users set up progress from config file
-    :return: Returns array of string containing strings relating to settings that are already set up
-    """
-    config_parser = config()
-    setup_progress = []
-    if config_parser.get("AppSettings", "tesseract_executable") != "your_path_to_tesseract_here":
-        setup_progress.append("tesseract")
-    if config_parser.get("AppSettings", "ide_executable") != "your_path_to_ide_here":
-        setup_progress.append("ide")
-    if config_parser.get("AppSettings", "openai_api_key") != "your_openai_api_key_here":
-        setup_progress.append("api")
-    if config_parser.get("UserSettings", "username") != "None":
-        setup_progress.append("username")
-    return setup_progress
-
-
 def parse_video_data() -> []:
     """
     Gets all video data from userdata storage and parses all data for in progress videos
@@ -446,87 +505,3 @@ def delete_video_from_userdata(filename: str) -> None:
             break
     with open("data/userdata.json", "w") as json_data:
         json.dump(user_data, json_data, indent=4)
-
-
-def update_configuration(new_values_dict) -> None:
-    """
-    Updates the configuration file with what has been passed in the front end.
-    :param new_values_dict: values input into dictionary to update config file
-    """
-    # load the config file:
-    config_file = config()
-    # Update multiple variables in different sections:
-    for section, section_data in new_values_dict.items():
-        if section not in config():
-            config_file.add_section(section)  # create the section if it doesn't exist
-        # set the config file with the new values
-        for key, value in section_data.items():
-            if isinstance(value, bool) or isinstance(value, int):
-                value = str(value)
-            config_file.set(section, key, value)
-    # save the file
-    with open('config.ini', 'w') as config_file_save:
-        config_file.write(config_file_save)
-
-
-def get_current_settings() -> dict:
-    """
-    gets the current settings stored withing the config.ini page and passes the values
-    to the /settings route
-    """
-    config_file = config()
-    current_settings = {
-        'AppSettings': {
-            'openai_api_key': config_file.get('AppSettings', 'openai_api_key'),
-            'ide_executable': config_file.get('AppSettings', 'ide_executable'),
-            'tesseract_executable': config_file.get('AppSettings', 'tesseract_executable'),
-        },
-        'UserSettings': {
-            'programming_language': config_file.get('UserSettings', 'programming_language'),
-            'output_path': config_file.get('UserSettings', 'capture_output_path'),
-            'mute_ui_sounds': config_file.get('UserSettings', 'mute_ui_sounds'),
-            'username': config_file.get('UserSettings', 'username'),
-        },
-        'Features': {
-            'use_youtube_downloader': config_file.get('Features', 'use_youtube_downloader')
-        }
-    }
-    return current_settings
-
-
-def extract_form_values(request):
-    new_username = str(request.form.get('username'))
-    if new_username == '':
-        new_username = 'None'
-    new_openai_api_key = str(request.form.get('openai_api_key'))
-    if new_openai_api_key == '':
-        new_openai_api_key = 'your_openai_api_key_here'
-    new_programming_language = str(request.form.get('programming_language'))
-    ui_sound_enabled = request.form.get('mute_ui_sounds') == 'True'
-    new_path_to_ide = str(request.form.get('ide_executable'))
-    if new_path_to_ide == '':
-        new_path_to_ide = 'your_path_to_ide_here'
-    new_path_to_tesseract = str(request.form.get('tesseract_executable'))
-    if new_path_to_tesseract == '':
-        new_path_to_tesseract = 'your_path_to_tesseract_here'
-    new_output_path = str(request.form.get('output_path'))
-    if new_output_path == '':
-        new_output_path = 'output_path'
-    youtube_downloader_enabled = request.form.get('use_youtube_downloader') == 'True'
-
-    return {
-        'AppSettings': {
-            'openai_api_key': new_openai_api_key,
-            'ide_executable': new_path_to_ide,
-            'tesseract_executable': new_path_to_tesseract,
-        },
-        'UserSettings': {
-            'programming_language': new_programming_language,
-            'output_path': new_output_path,
-            'mute_ui_sounds': ui_sound_enabled,
-            'username': new_username,
-        },
-        'Features': {
-            'use_youtube_downloader': youtube_downloader_enabled,
-        }
-    }

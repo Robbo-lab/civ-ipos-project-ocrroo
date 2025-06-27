@@ -24,7 +24,7 @@ def utility_processor():
     :return: Object containing all hotkeys
     """
     return {
-        "hotkeys": utils.config()["Hotkeys"]
+        "hotkeys": utils.ConfigManager.load["Hotkeys"]
     }
 
 
@@ -37,7 +37,7 @@ def index():
     parsed_video_data = utils.parse_video_data()
     return render_template("index.html",
                            continue_watching=parsed_video_data["continue_watching"],
-                           all_videos=parsed_video_data["all_videos"], setup_progress=utils.get_setup_progress())
+                           all_videos=parsed_video_data["all_videos"], setup_progress=utils.ConfigManager.get_setup_progress)
 
 
 @app.route("/settings")
@@ -46,7 +46,7 @@ def settings():
     Return the settings view/template
     :return: Rendered template for settings page
     """
-    current_settings = utils.get_current_settings()
+    current_settings = utils.ConfigManager.get_current_settings()
     return render_template("settings.html", current_settings=current_settings)
 
 
@@ -219,10 +219,10 @@ def delete_video(delete_filename):
 @app.route("/update_settings", methods=['GET', 'POST'])
 def update_settings():
     if request.method == "POST":
-        new_values = utils.extract_form_values(request)
-        utils.update_configuration(new_values)
+        new_values = utils.ConfigManager.extract_form_values(request)
+        utils.ConfigManager.update(new_values)
         return redirect('/settings')
-    current_settings = utils.get_current_settings()
+    current_settings = utils.ConfigManager.get_current_settings()
     return render_template('settings.html', current_settings=current_settings)
 
 
@@ -233,7 +233,7 @@ def reset_settings():
     if os.path.exists('config.ini'):
         os.remove('config.ini')
     shutil.copy('config.example.ini', 'config.ini')
-    current_settings = utils.get_current_settings()
+    current_settings = utils.ConfigManager.get_current_settings()
     return render_template('settings.html', current_settings=current_settings)
 
 
@@ -245,10 +245,10 @@ def update_tesseract_path():
         # Set the flag to indicate cancellation
         cancel_search_flag = True
         message = 'Tesseract search canceled.'
-        current_settings = utils.get_current_settings()
+        current_settings = utils.ConfigManager.get_current_settings()
         return render_template('settings.html', current_settings=current_settings, message=message)
 
-    current_settings = utils.get_current_settings()
+    current_settings = utils.ConfigManager.get_current_settings()
     if current_settings['AppSettings']['tesseract_executable'] == 'your_path_to_tesseract_here' \
             or current_settings['AppSettings']['tesseract_executable'] == '':
         file_pattern = 'tesseract.exe'
@@ -263,9 +263,9 @@ def update_tesseract_path():
 
                     for file in glob.glob(os.path.join(root, file_pattern)):
                         file_path = file
-                        utils.update_configuration({'AppSettings': {'tesseract_executable': file_path}})
+                        utils.ConfigManager.update({'AppSettings': {'tesseract_executable': file_path}})
                         message = 'Tesseract executable found and path updated successfully.'
-                        current_settings = utils.get_current_settings()
+                        current_settings = utils.ConfigManager.get_current_settings()
                         return render_template('settings.html', current_settings=current_settings, message=message)
 
     message = 'Could not find tesseract executable. Please enter the path manually.'
