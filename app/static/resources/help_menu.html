@@ -6,7 +6,11 @@ A web based command line tool for interacting with the OcrRoo application.
 
 <strong>Commands:</strong>
     <strong>navigate</strong>                         Navigates to a specified page within the application.
-    <strong>list-videos</strong>                      Lists all videos currently in your library.
+    <strong>list-videos [sort=&lt;criteria&gt;]</strong>Lists all videos with optional sorting.
+    <strong>Available Sort Criteria:</strong>
+    - alias (default)
+    - timestamp (duration, descending)
+    - captures (number of captures, descending)
     <strong>play-video &lt;filename&gt;</strong>            Play a video from your library.
     <strong>capture</strong>                          Captures the code in the current frame of a playing video.
     <strong>open</strong>                             Opens the most recent capture in the preferred IDE.

@@ -1,5 +1,6 @@
 from app import web_cli
 from tests.test_utils import load_dummy_user_data
+from app.utils import sort_videos
 
 
 def test_parse_command_cls():
@@ -26,6 +27,11 @@ def test_parse_command_open():
 def test_parse_command_list_videos(mocker):
     mocker.patch("app.web_cli.list_videos", return_value="dummy video list")
     assert web_cli.parse_command("list-videos") == "dummy video list"
+
+
+def test_parse_command_list_videos_with_sort(mocker):
+    mocker.patch("app.web_cli.list_videos", return_value="dummy video list")
+    assert web_cli.parse_command("list-videos sort") == "dummy video list"
 
 
 def test_parse_command_available_videos(mocker):
@@ -94,3 +100,48 @@ def test_list_videos(mocker):
 def test_list_videos_empty(mocker):
     mocker.patch("app.utils.read_user_data", return_value=None)
     assert web_cli.list_videos() == "<p class='text-red-500'>No videos found in your library.<p>"
+
+
+def test_list_videos_sorted_by_captures(mocker):
+    dummy_data = load_dummy_user_data()
+    mocker.patch("app.utils.read_user_data", return_value=dummy_data)
+    sorted_data = sort_videos(dummy_data["all_videos"], sort_by="captures")
+    mocker.patch("app.utils.sort_videos", return_value=sorted_data)
+
+    result = web_cli.list_videos(sort_by="captures")
+    first = sorted_data[0]["filename"]
+    assert first == "list_ops_handwriting.mp4"  # 1 capture
+    assert "oop.mp4" in result  # 0 capture
+    assert "loops.mp4" in result  # 0 capture
+
+
+def test_list_videos_sorted_by_timestamp(mocker):
+    dummy_data = load_dummy_user_data()
+    mocker.patch("app.utils.read_user_data", return_value=dummy_data)
+    sorted_data = sort_videos(dummy_data["all_videos"], sort_by="timestamp")
+    mocker.patch("app.utils.sort_videos", return_value=sorted_data)
+    result = web_cli.list_videos(sort_by="timestamp")
+    first = sorted_data[0]["filename"]
+    second = sorted_data[1]["filename"]
+    third = sorted_data[2]["filename"]
+    # the longest value comes first
+    assert result.index(first) < result.index(second) < result.index(third)
+    assert first == "oop.mp4"  # longest video 632
+    assert second == "loops.mp4"  # next longest 418
+    assert third == "list_ops_handwriting.mp4"  # shortest 186
+
+
+def test_list_videos_sorted_by_alias(mocker):
+    dummy_data = load_dummy_user_data()
+    mocker.patch("app.utils.read_user_data", return_value=dummy_data)
+    sorted_data = sort_videos(dummy_data["all_videos"], sort_by="alias")
+    mocker.patch("app.utils.sort_videos", return_value=sorted_data)
+    result = web_cli.list_videos(sort_by="alias")
+    first = sorted_data[0]["filename"]
+    second = sorted_data[1]["filename"]
+    third = sorted_data[2]["filename"]
+    # alphabetical order
+    assert result.index(first) < result.index(second) < result.index(third)
+    assert first == "list_ops_handwriting.mp4"
+    assert second == "loops.mp4"
+    assert third == "oop.mp4"

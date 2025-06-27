@@ -15,7 +15,7 @@ def parse_command(command: str) -> Union[str, dict]:
         return "clear"
     # Help menu command
     if command == "help":
-        return utils.read_from_file("static\\resources\\help_menu.html")
+        return utils.read_from_file("app\\static\\resources\\help_menu.html")
     # Capture frame command
     if command == "capture":
         return "capture"
@@ -23,8 +23,13 @@ def parse_command(command: str) -> Union[str, dict]:
     if command == "open":
         return "open"
     # List videos command
-    if command == "list-videos":
-        return list_videos()
+    if command.startswith("list-videos"):
+        parts = command.split(" ")
+        sort_by = "alias"
+        for part in parts[1:]:
+            if part.startswith("sort="):
+                sort_by = part.split("=", 1)[1].strip().lower()
+        return list_videos(sort_by=sort_by)
     # Available videos for autocomplete
     if command == "available-videos":
         return available_videos()
@@ -79,7 +84,7 @@ def available_videos() -> {}:
     return filename_dict
 
 
-def list_videos() -> str:
+def list_videos(sort_by="alias") -> str:
     """
     Returns formatted list of videos in users library
     :return: HTML formatted string of videos
@@ -88,7 +93,7 @@ def list_videos() -> str:
     user_data = utils.read_user_data()
     if user_data is None:
         return "<p class='text-red-500'>No videos found in your library.<p>"
-    all_videos = user_data["all_videos"]
+    all_videos = utils.sort_videos(user_data["all_videos"], sort_by=sort_by)  # sort videos before formatting
     formatted_video_string = "<pre><strong>Your Videos:</strong>"
     for current_video in all_videos:
         current_video_string = f"<br><p><strong>Filename: " \

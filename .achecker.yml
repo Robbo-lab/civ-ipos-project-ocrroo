@@ -1,0 +1,23 @@
+# .achecker.yml
+
+ruleArchive: latest
+
+policies:
+  - IBM_Accessibility
+
+failLevels:
+
+
+reportLevels:
+
+
+outputFormat:
+  - json
+
+outputFolder: results
+
+outputFilenameTimestamp: true
+
+puppeteerArgs:
+  - --no-sandbox
+  - --disable-setuid-sandbox
