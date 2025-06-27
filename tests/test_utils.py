@@ -102,8 +102,8 @@ def test_get_file_extension_for_current_language(mocker):
         "fake_language": ".txt", "": ".txt"
     }
     for language in programming_languages:
-        mocker.patch("app.utils.config", return_value=language)
-        assert utils.get_file_extension_for_current_language() == programming_languages[language]
+        mocker.patch("app.utils.ConfigManager.load", return_value=language)
+        assert utils.GeneralUtils.get_file_extension_for_current_language() == programming_languages[language]
 
 
 def test_hash_string():
@@ -113,18 +113,22 @@ def test_hash_string():
         "this is a string": "b37e16c620c055cf8207b999e3270e9b"
     }
     for string in test_strings:
-        assert utils.hash_string(string) == test_strings[string]
+        assert utils.GeneralUtils.hash_string(string) == test_strings[string]
+
 
 
 def test_get_output_path(mocker):
+    # Mock os.getcwd and os.path.dirname for predictable output
+    mocker.patch("os.getcwd", return_value="/home/user/project")
+    mocker.patch("os.path.dirname", return_value="/home/user")
     test_output_paths = {
         "c:\\users\\program files\\app": "c:\\users\\program files\\app\\",
-        "output_path": os.path.dirname(os.getcwd()) + "\\out\\",
+        "output_path": os.path.join("/home/user", "out") + os.sep,
         "videos\\my_videos\\": "videos\\my_videos\\",
     }
-    for paths in test_output_paths:
-        mocker.patch("app.utils.config", return_value=paths)
-        assert utils.get_output_path() == test_output_paths[paths]
+    for input_path, expected_output in test_output_paths.items():
+        mocker.patch("app.utils.config", return_value=input_path)
+        assert utils.get_output_path() == expected_output
 
 
 def test_file_already_exists_true(mocker):
