@@ -544,7 +544,7 @@ def sort_videos(video_list, sort_by="alias"):
         list: The sorted list of video dictionaries.
     """
     if sort_by == "timestamp":
-        # lambda function: for each video, use the value "video_length" as the sorting key, and sort from largest to smallest.
+        # the lambda returns the value "video_length" as the sorting key and sorts from largest to smallest.
         return sorted(video_list, key=lambda x: x["video_length"], reverse=True)
     elif sort_by == "captures":
         # the lambda returns the number of captures in the video, and more captures will come first.
